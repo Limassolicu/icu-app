@@ -1,0 +1,3831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LIMASSOL ICU Infection Tracker</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+    <style>
+        :root {
+    --primary-color: #2c3e50;
+    --secondary-color: #3498db;
+    --success-color: #2ecc71;
+    --danger-color: #e74c3c;
+    --light-color: #ecf0f1;
+    --dark-color: #34495e;
+}
+select[multiple] {
+    height: auto;
+    min-height: 38px;
+    max-height: 120px;
+    overflow-y: auto;
+    padding: 6px;
+}
+select[multiple] option {
+    padding: 4px 8px;
+}
+body { 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    margin: 0;
+    padding: 20px;
+    background-color: #f5f7fa;
+    color: #333;
+    line-height: 1.6;
+}
+h1 {
+    color: var(--primary-color);
+    text-align: center;
+    margin-bottom: 30px;
+    font-weight: 300;
+    border-bottom: 2px solid var(--secondary-color);
+    padding-bottom: 10px;
+}
+.hidden { display: none; }
+button {
+    padding: 8px 12px;
+    margin: 2px;
+    font-size: 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    min-width: 60px;    
+}
+.btn-primary {
+    background-color: var(--secondary-color);
+    color: white;
+}
+.btn-success {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.btn-success:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+/* Updated .btn-infection styles */
+.btn-infection {
+    background-color: var(--secondary-color); /* Blue from :root */
+    color: white;
+    border: 1px solid var(--primary-color); /* Darker border for contrast */
+}
+
+.btn-infection:hover {
+    background-color: var(--primary-color); /* Darker blue on hover */
+    border-color: var(--dark-color);
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+/* Ensure button alignment in antibioticSection */
+#antibioticSection .btn-infection {
+    margin-left: 8px; /* Consistent spacing if buttons are side by side */
+}
+.btn-danger {
+    background-color: #e74c3c;
+    color: white;
+}
+.btn-default {
+    background-color: var(--light-color);
+    color: var(--dark-color);
+}
+.deleteBtn, .prevBtn, .nextBtn {
+    min-width: 40px;
+    padding: 5px 8px;
+}
+button:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+button:disabled {
+    background-color: #bdc3c7;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+.btn-infection-custom {
+    background-color: #8e44ad;
+    color: white;
+    border: none;
+}
+.btn-infection-custom:hover {
+    background-color: #732d91;
+    transform: translateY(-1px);
+    opacity: 0.9;
+}
+
+.section { 
+    border: 1px solid #ddd;
+    padding: 20px;
+    margin-bottom: 25px; 
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+.form-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.form-row label { 
+    font-weight: 500; 
+    color: var(--dark-color);
+    min-width: 80px;
+}
+.form-row input, 
+.form-row select { 
+    width: 180px;
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+input:focus, select:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+h2, h3 { 
+    margin-top: 0; 
+    color: var(--primary-color);
+    font-weight: 400;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+    font-size: 14px;
+}
+th, td { 
+    padding: 8px 10px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+th {
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: 500;
+    font-size: 13px;
+}
+tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+tr:hover {
+    background-color: #f1f1f1;
+}
+.action-cell { 
+    white-space: nowrap; 
+}
+.action-cell button { 
+    margin: 1px;
+    padding: 5px 8px;
+    font-size: 12px;
+}
+.infected { 
+    background-color: rgba(231, 76, 60, 0.1);
+}
+.save-highlight {
+    animation: highlightSave 1.5s;
+}
+.field-highlight {
+    animation: fieldHighlight 1.5s;
+}
+@keyframes fieldHighlight {
+    0% { background-color: rgba(46, 204, 113, 0.3); }
+    100% { background-color: transparent; }
+}
+.data-management { 
+    margin-top: 25px;
+    text-align: center;
+}
+.data-management button {
+    margin: 0 8px 8px 0;
+    min-width: 110px;
+    padding: 8px 12px;
+}
+.form-actions {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+}
+.counter {
+    font-size: 12px;
+    color: #7f8c8d;
+    white-space: nowrap;
+}
+.col-bed { width: 40px; }
+.col-id { width: 80px; }
+.col-name { width: 120px; }
+.col-date { width: 90px; }
+.col-age { width: 50px; }
+.col-actions { width: 400px; }
+.col-history { width: 70px; }
+.resistance-container {
+    margin-top: 10px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 5px;
+}
+.resistance-tag {
+    display: inline-block;
+    background-color: #e0e0e0;
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin-right: 8px;
+    margin-bottom: 8px;
+    font-size: 13px;
+}
+.resistance-tag button {
+    padding: 0 4px;
+    margin-left: 6px;
+    background: transparent;
+    border: none;
+    color: #e74c3c;
+    cursor: pointer;
+    font-weight: bold;
+}
+.antibiotic-form-container, .foreign-body-form-container, .clinical-data-form-container {
+    margin-top: 15px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 5px;
+}
+@media (max-width: 768px) {
+    .section {
+        padding: 15px;
+    }
+    .form-row label {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+    .form-row input, 
+    .form-row select {
+        width: 100%;
+    }
+}
+.transfer-history {
+    margin-top: 15px;
+    padding: 5px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    font-size: 11px;
+    color: #666;
+}
+.transfer-entry {
+    display: inline;
+    margin-right: 8px;
+    padding: 0;
+    border: none;
+}
+.aware {
+    font-size: 0.75em;
+    font-weight: bold;
+    margin-left: 4px;
+}
+.aware.Access {
+    color: #2e7d32;
+}
+.aware.Watch {
+    color: #ef6c00;
+}
+.aware.Reserve {
+    color: #c62828;
+}
+.infection-entry {
+    margin-bottom: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px;
+    background: #f9f9f9;
+}
+.infection-header {
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--primary-color);
+    padding: 8px;
+    background: #ecf0f1;
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.infection-details {
+    padding-left: 10px;
+}
+
+.infection-details p {
+    margin: 0 !important;
+}
+
+.antibiotic-list {
+    margin-top: 10px;
+    padding-left: 20px;
+}
+.antibiotic-entry {
+    padding: 5px;
+    border-bottom: 1px solid #eee;
+}
+.collapsed .infection-details,
+.collapsed .antibiotic-list {
+    display: none;
+}
+.infection-actions button {
+    margin-left: 5px;
+}
+.compact-infection {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    padding: 8px;
+    background: #f9f9f9;
+}
+.compact-infection-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    padding: 4px 8px;
+    margin-bottom: 2px; /* Add this if not present */
+    background: #ecf0f1;
+    border-radius: 3px;
+}
+.compact-infection-title {
+    font-weight: 500;
+    color: var(--primary-color);
+}
+.compact-antibiotic {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px; /* reduced from 8px */
+    margin-top: 4px; /* reduced vertical spacing */
+    padding: 0px 8px; /* slightly tighter */
+    background: #ffffff;
+    border-radius: 3px;
+    border-left: 3px solid var(--secondary-color);
+    align-items: center;
+}
+
+.compact-ab-name {
+    font-weight: bold;
+    margin-right: 5px;
+}
+.compact-ab-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    font-size: 13px;
+    color: #555;
+}
+.compact-ab-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 3px;
+}
+.compact-ab-actions button {
+    padding: 6px 10px;
+    font-size: 12px;
+    border-radius: 4px;
+    min-width: 60px;
+}
+.inline-antibiotic-form {
+    background: #f8fafc;
+    padding: 12px;
+    margin: 8px 0;
+    border-radius: 6px;
+    border: 1px solid #d1d8e0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+.inline-form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 8px;
+    align-items: center;
+}
+.inline-form-row label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--dark-color);
+    min-width: 80px;
+}
+.inline-form-row input, 
+.inline-form-row select {
+    padding: 6px 10px;
+    font-size: 13px;
+    min-width: 120px;
+    border: 1px solid #d1d8e0;
+    border-radius: 4px;
+    font-family: inherit;
+}
+.inline-form-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+.inline-form-actions button {
+    padding: 6px 12px;
+    font-size: 13px;
+    font-family: inherit;
+}
+.antibiotic-select {
+    width: 200px !important;
+}
+.infection-form-container {
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 5px;
+    margin-top: 10px;
+    border: 1px solid #ddd;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+.infection-form-container .form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 10px;
+    align-items: center;
+}
+.infection-form-container label {
+    min-width: 100px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--dark-color);
+    display: inline-block;
+}
+.infection-form-container input,
+.infection-form-container select {
+    padding: 6px 10px;
+    border: 1px solid #d1d8e0;
+    border-radius: 4px;
+    font-size: 13px;
+    min-width: 180px;
+    font-family: inherit;
+}
+.infection-form-container .form-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+.infection-form-container .form-actions button {
+    padding: 6px 12px;
+    font-size: 13px;
+    font-family: inherit;
+}
+
+@media (max-width: 768px) {
+    .infection-form-container .form-row label {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+    .infection-form-container .form-row input,
+    .infection-form-container .form-row select {
+        width: 100%;
+    }
+}
+#antibioticSection .form-actions {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    padding-left: 10px; /* Aligns with other indented buttons */
+}
+.btn-orange {
+    background-color: purple;
+    color: white;
+    border: none;
+    font-weight: 500;
+}
+.btn-orange:hover {
+    background-color: darkorange;
+    transform: translateY(-1px);
+    opacity: 0.9;
+}
+
+.btn-darkblue {
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: 500;
+    border: none;
+}
+.btn-darkblue:hover {
+    background-color: #1a252f; /* slightly darker than --primary-color */
+    transform: translateY(-1px);
+    opacity: 0.9;
+}
+.btn-lightblue {
+    background-color: #6a9ac2;  /* soft medium-light blue */
+    color: white;
+    font-weight: 500;
+    border: none;
+}
+.btn-lightblue:hover {
+    background-color: #5a80a1; /* subtle hover effect */
+    transform: translateY(-1px);
+    opacity: 0.9;
+}
+#manageSection.fullscreen {
+    position: fixed !important;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: white;
+    z-index: 9999;
+    overflow-y: auto;
+    padding: 20px;
+    box-shadow: none;
+    border-radius: 0;
+}
+.ongoing-green {
+    background-color: #e2f4e2; /* very soft green */
+}
+
+.ongoing-yellow {
+    background-color: #fff8cc; /* pale yellow */
+}
+
+.ongoing-orange {
+    background-color: #ffe0b3; /* light peachy-orange */
+    color: #000;
+}
+
+.ongoing-red {
+    background-color: #f8caca; /* light rosy red */
+    color: #000;
+}
+  
+    </style>
+</head>
+<body>
+    <h1>LIMASSOL ICU Infection Tracker</h1>
+
+    <table id="bedTable">
+        <thead>
+            <tr>
+                <th class="col-bed">Bed</th>
+                <th class="col-id">Patient ID</th>
+                <th class="col-name">Name</th>
+                <th class="col-date">DOB</th>
+                <th class="col-date">Admission</th>
+                <th class="col-date">Discharge</th>
+                <th class="col-age">Age</th>
+                <th class="col-actions">Actions</th>
+                <th class="col-history">History</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <div id="patientForm" class="hidden section">
+        <h2><span id="formMode">Admit/Edit Patient</span> (Bed <span id="bedNumberDisplay"></span>)</h2>
+        <div class="form-row">
+            <label for="patientID">Patient ID:</label>
+            <input type="text" id="patientID">
+        </div>
+        <div class="form-row">
+            <label for="fullName">Name:</label>
+            <input type="text" id="fullName">
+        </div>
+        <div class="form-row">
+            <label for="dob">DOB:</label>
+            <input type="date" id="dob">
+        </div>
+        <div class="form-row">
+            <label for="gender">Gender:</label>
+            <select id="gender">
+                <option value="">-- Select Gender --</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+            </select>
+        </div>
+        <div class="form-row">
+            <label for="height">Height (cm):</label>
+            <input type="number" step="0.1" id="height">
+            <label for="weight">Weight (kg):</label>
+            <input type="number" step="0.1" id="weight">
+        </div>
+        <div class="form-row">
+            <label for="bmi">BMI:</label>
+            <input type="number" step="0.1" id="bmi" readonly>
+        </div>
+        <div class="form-row">
+            <label for="admissionDate">Admission Date:</label>
+            <input type="date" id="admissionDate">
+        </div>
+        <div class="form-row">
+            <label for="dischargeDate">Discharge Date:</label>
+            <input type="date" id="dischargeDate">
+        </div>
+        <div class="form-row">
+            <label for="mdrStatus">MDR Status:</label>
+            <input type="text" id="mdrStatus">
+        </div>
+        <div class="form-actions">
+            <button id="prevPatientBtn" class="btn-primary" disabled>Previous Patient</button>
+            <button id="nextPatientBtn" class="btn-primary" disabled>Next Patient</button>
+            <button id="saveBtn" class="btn-success">Save</button>
+            <button id="cancelBtn" class="btn-default">Cancel</button>
+        </div>
+    </div>
+    
+
+    <div id="manageSection" class="hidden section">
+  <h2>Manage Bed <span id="manageBed"></span> - <span id="manageName"></span></h2>
+
+  <div id="transferHistoryContainer" class="transfer-history hidden"></div>
+
+  <div class="form-actions" style="margin-bottom: 20px;">
+    <button onclick="returnToBoard()" class="btn-lightblue">Return to Beds</button>
+  </div>
+
+        
+        <!-- ✅ CULTURE SECTION -->
+<div id="cultureSection" class="section">
+  <h3>Cultures</h3>
+
+  <div id="culturesTableWrapper" style="max-height: 250px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; background: #fff; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 10px;">
+    <table id="culturesTable" style="width: 100%; border-collapse: collapse;">
+      <thead>
+        <tr>
+          <th>Specimen</th>
+          <th>Date</th>
+          <th>Timing</th>
+          <th>Organism</th>
+          <th>Sensitivities</th>
+          <th>Resistance Patterns</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div id="culturePreview" style="margin-bottom: 20px; background: #f0f8ff; padding: 10px; border-left: 4px solid #3498db; display: none;"></div>
+
+  <div id="cultureForm" class="hidden">
+    <!-- Specimen selection + timing -->
+    <div class="form-row">
+      <label for="cultureSpecimen">Specimen:</label>
+      <select id="cultureSpecimen">
+        <option value="">-- Select Specimen --</option>
+        <option value="Βρογχικές">Βρογχικές</option>
+        <option value="Αίμα Περιφερική">Αίμα Περιφερική</option>
+        <option value="Αίμα ΚΦΚ">Αίμα ΚΦΚ</option>
+        <option value="Αίμα Αρτηριακή">Αίμα Αρτηριακή</option>
+        <option value="Άκρο καθετήρα">Άκρο καθετήρα</option>
+        <option value="Ούρα">Ούρα</option>
+        <option value="Πτύελα">Πτύελα</option>
+        <option value="ΕΝΥ">ΕΝΥ</option>
+        <option value="ΒΑL">ΒΑL</option>
+        <option value="Φορεία Ορθού">Φορεία Ορθού</option>
+        <option value="Φορεία Ρινός">Φορεία Ρινός</option>
+        <option value="Πλευριτικό">Πλευριτικό</option>
+        <option value="Ασκιτικό">Ασκιτικό</option>
+        <option value="Συλλογή">Συλλογή</option>
+      </select>
+
+      <label for="cultureDate">Date:</label>
+      <input type="date" id="cultureDate">
+
+      <label for="cultureTiming">Timing:</label>
+      <select id="cultureTiming">
+        <option value="">-- Select Timing --</option>
+        <option value="Before antibiotics">Before antibiotics</option>
+        <option value="Before new antibiotics">Before new antibiotics</option>
+        <option value="After antibiotics">After antibiotics</option>
+      </select>
+
+      <button onclick="addCultureEntry()" class="btn-primary">Add Culture</button>
+    </div>
+
+    <!-- Organism form -->
+    <div id="organismSection" class="hidden">
+      <div class="form-row">
+        <label for="cultureOrganism">Organism:</label>
+        <select id="cultureOrganism">
+          <option value="">-- Select Organism --</option>
+                            <option value="Microorganism not identified">Microorganism not identified</option>
+                            <option value="Examination not done">Examination not done</option>
+                            <option value="Sterile examination">Sterile examination</option>
+                            <option value="Result not (yet) available or missing">Result not (yet) available or missing</option>
+                            <option value="Staphylococcus aureus">Staphylococcus aureus</option>
+                            <option value="Coagulase-negative staphylococci (CNS)">Coagulase-negative staphylococci (CNS)</option>
+                            <option value="Streptococcus pneumoniae">Streptococcus pneumoniae</option>
+                            <option value="Streptococcus agalactiae (B)">Streptococcus agalactiae (B)</option>
+                            <option value="Streptococcus pyogenes (A)">Streptococcus pyogenes (A)</option>
+                            <option value="Streptococcus spp., other">Streptococcus spp., other</option>
+                            <option value="Enterococcus faecalis">Enterococcus faecalis</option>
+                            <option value="Enterococcus faecium">Enterococcus faecium</option>
+                            <option value="Moraxella catharralis">Moraxella catharralis</option>
+                            <option value="Neisseria meningitides">Neisseria meningitides</option>
+                            <option value="Corynebacterium spp.">Corynebacterium spp.</option>
+                            <option value="Bacillus spp.">Bacillus spp.</option>
+                            <option value="Lactobacillus spp.">Lactobacillus spp.</option>
+                            <option value="Listeria monocytogenes">Listeria monocytogenes</option>
+                            <option value="Citrobacter freundii">Citrobacter freundii</option>
+                            <option value="Citrobacter koseri (e.g. diversus)">Citrobacter koseri (e.g. diversus)</option>
+                            <option value="Enterobacter cloacae">Enterobacter cloacae</option>
+                            <option value="Escherichia coli">Escherichia coli</option>
+                            <option value="Klebsiella">Klebsiella</option>
+                            <option value="Proteus">Proteus</option>
+                            <option value="Serratia marcescens">Serratia marcescens</option>
+                            <option value="Hafnia spp.">Hafnia spp.</option>
+                            <option value="Morganella spp.">Morganella spp.</option>
+                            <option value="Providencia spp.">Providencia spp.</option>
+                            <option value="Salmonella">Salmonella</option>
+                            <option value="Shigella spp.">Shigella spp.</option>
+                            <option value="Yersinia spp.">Yersinia spp.</option>
+                            <option value="Other enterobacterales">Other enterobacterales</option>
+                            <option value="Acinetobacter baumannii">Acinetobacter baumannii</option>
+                            <option value="Pseudomonas aeruginosa">Pseudomonas aeruginosa</option>
+                            <option value="Stenotrophomonas maltophilia">Stenotrophomonas maltophilia</option>
+                            <option value="Burkholderia cepacia">Burkholderia cepacia</option>
+                            <option value="Haemophilus influenza">Haemophilus influenza</option>
+                            <option value="Legionella spp.">Legionella spp.</option>
+                            <option value="Achromobacter spp.">Achromobacter spp.</option>
+                            <option value="Aeromonas spp.">Aeromonas spp.</option>
+                            <option value="Campylobacter spp.">Campylobacter spp.</option>
+                            <option value="Gardnerella spp.">Gardnerella spp.</option>
+                            <option value="Pasteurella spp.">Pasteurella spp.</option>
+                            <option value="Bacteroïdes fragilis">Bacteroïdes fragilis</option>
+                            <option value="Clostridioides difficile">Clostridioides difficile</option>
+                            <option value="Propionibacterium spp.">Propionibacterium spp.</option>
+                            <option value="Prevotella spp.">Prevotella spp.</option>
+                            <option value="Anaerobes, not specified">Anaerobes, not specified</option>
+                            <option value="Actinomyces spp.">Actinomyces spp.</option>
+                            <option value="Nocardia spp.">Nocardia spp.</option>
+                            <option value="Candida albicans">Candida albicans</option>
+                            <option value="Candida auris">Candida auris</option>
+                            <option value="Candida glabrata">Candida glabrata</option>
+                            <option value="Candida krusei">Candida krusei</option>
+                            <option value="Candida parapsilosis">Candida parapsilosis</option>
+                            <option value="Candida tropicalis">Candida tropicalis</option>
+                            <option value="Aspergillus">Aspergillus</option>
+                            <option value="Cytomegalovirus (CMV)">Cytomegalovirus (CMV)</option>
+                            <option value="SARS-CoV-2">SARS-CoV-2</option>
+                            <option value="Enterovirus (polio, coxsackie, echo)">Enterovirus (polio, coxsackie, echo)</option>
+                            <option value="Hepatitis A virus">Hepatitis A virus</option>
+                            <option value="Hepatitis B virus">Hepatitis B virus</option>
+                            <option value="Hepatitis C virus">Hepatitis C virus</option>
+                            <option value="Herpes simplex virus">Herpes simplex virus</option>
+                            <option value="Human immunodeficiency virus (HIV)">Human immunodeficiency virus (HIV)</option>
+                            <option value="Influenza A virus">Influenza A virus</option>
+                            <option value="Influenza B virus">Influenza B virus</option>
+                            <option value="Parainfluenzavirus">Parainfluenzavirus</option>
+                            <option value="Respiratory syncytial virus (RSV)">Respiratory syncytial virus (RSV)</option>
+                            <option value="Rhinovirus">Rhinovirus</option>
+                            <option value="Varicella-zoster virus">Varicella-zoster virus</option>
+                            <option value="Virus, not specified">Virus, not specified</option>
+        </select>
+        <button onclick="addOrganism()" class="btn-primary">Add Organism</button>
+      </div>
+    </div>
+
+    <!-- Sensitivities -->
+    <div id="sensitivitySection" class="hidden">
+      <div class="form-row">
+        <label for="cultureAntibiotic">Antibiotic:</label>
+        <select id="cultureAntibiotic"></select>
+
+        <label for="cultureResult">Result:</label>
+        <select id="cultureResult">
+          <option value="">-- Select Result --</option>
+          <option value="S">S</option>
+          <option value="R">R</option>
+          <option value="I">I</option>
+        </select>
+
+        <button onclick="addSensitivity()" class="btn-primary">Add Sensitivity</button>
+      </div>
+    </div>
+
+    <!-- Resistance -->
+    <div id="resistanceSection" class="hidden">
+      <h3>Resistance Patterns</h3>
+      <div class="form-row">
+        <label for="resistancePattern">Pattern:</label>
+        <select id="resistancePattern">
+          <option value="">-- Select Resistance --</option>
+          <option value="APR">Aminopenicillin (Amoxicillin/Ampicillin)</option>
+          <option value="ESBL">ESBL</option>
+          <option value="3GC">Third-generation Cephalosporin</option>
+          <option value="P/T">PIP/TAZ</option>
+          <option value="CEFT">Ceftazidime</option>
+          <option value="CRO">Carbapenem</option>
+          <option value="FQ">Fluoroquinolone</option>
+          <option value="AMG">Aminoglycoside</option>
+          <option value="BL/BLIS">Newer BL/BLIS</option>
+          <option value="MRSA">MRSA</option>
+          <option value="VANC">Vancomycin</option>
+        </select>
+        <button onclick="addResistance()" class="btn-primary">Add Resistance</button>
+        <button onclick="saveResistances()" class="btn-success">Save Resistances</button>
+      </div>
+      <div id="selectedResistances" class="resistance-container"></div>
+    </div>
+
+    <div class="form-actions" style="margin-top: 20px;">
+      <button id="saveCultureBtn" class="btn-success">Save Culture</button>
+      <button onclick="resetCultureForm()" class="btn-default">Cancel</button>
+    </div>
+  </div>
+
+  <div class="form-actions" style="margin-top: 12px;">
+    <button onclick="showCultureSection(); resetCultureForm();" class="btn-orange">New Culture</button>
+  </div>
+</div> <!-- ✅ END of cultureSection -->
+
+
+        <!-- ✅ INFECTION & ANTIBIOTIC SECTION -->
+<div id="antibioticSection" class="section">
+  <h3>Infections and Antibiotics</h3>
+    
+    <!-- Infection Management Form -->
+    <div id="infectionForm" class="hidden antibiotic-form-container">
+        <h3>Add Infection Episode</h3>
+        <div class="form-row">
+            <label for="infType">Infection Type:</label>
+            <select id="infType">
+                <option value="">-- Select Infection Type --</option>
+                <option value="Medical prophylaxis">Medical prophylaxis</option>
+                <option value="Surgical prophylaxis">Surgical prophylaxis</option>
+                <option value="SSI-S Επιφανειακή λοίμωξη χειρουργικής τομής">SSI-S Επιφανειακή λοίμωξη χειρουργικής τομής</option>
+                <option value="SSI-D Εν τω βάθει λοίμωξη χειρουργικής τομής">SSI-D Εν τω βάθει λοίμωξη χειρουργικής τομής</option>
+                        <option value="SSI-O Λοίμωξη οργάνων ή ανατομικών χώρων χειρουργικού πεδίου">SSI-O Λοίμωξη οργάνων ή ανατομικών χώρων χειρουργικού πεδίου</option>
+                        <option value="PN1 Ποσοτική καλλιέργεια ελάχιστα επιμολυσμένου δείγματος (BAL)">PN1 Ποσοτική καλλιέργεια ελάχιστα επιμολυσμένου δείγματος (BAL)</option>
+                        <option value="PN2 Ποσοτική καλλιέργεια πιθανά επιμολυσμένου δείγματος">PN2 Ποσοτική καλλιέργεια πιθανά επιμολυσμένου δείγματος</option>
+                        <option value="PN3 Εναλλακτικές μικροβιολογικές μέθοδοι">PN3 Εναλλακτικές μικροβιολογικές μέθοδοι</option>
+                        <option value="PN4 Μη ποσοτική καλλιέργεια βρογχικών ή πτυέλων">PN4 Μη ποσοτική καλλιέργεια βρογχικών ή πτυέλων</option>
+                        <option value="PN5 Όχι θετική μικροβιολογική εξέταση">PN5 Όχι θετική μικροβιολογική εξέταση</option>
+                        <option value="COV-ASY Ασυμπτωματική νόσηση">COV-ASY Ασυμπτωματική νόσηση</option>
+                        <option value="COV-MM Ήπια- μέτρια (Κορεσμός ≥92% στον αέρα)">COV-MM Ήπια- μέτρια (Κορεσμός ≥92% στον αέρα)</option>
+                        <option value="COV-SEV Σοβαρή/ κρίσιμη νόσος (Κορεσμός <92% ή ανάγκη για οξυγόνο)">COV-SEV Σοβαρή/ κρίσιμη νόσος (Κορεσμός <92% ή ανάγκη για οξυγόνο)</option>
+                        <option value="UTI-A Συμπτωματική ουρολοίμωξη μικροβιολογικά επιβεβαιωμένη (≥10^5)">UTI-A Συμπτωματική ουρολοίμωξη μικροβιολογικά επιβεβαιωμένη (≥10^5)</option>
+                        <option value="UTI-B Συμπτωματική ουρολοίμωξη μη επιβεβαιωμένη (<10^5)">UTI-B Συμπτωματική ουρολοίμωξη μη επιβεβαιωμένη (<10^5)</option>
+                        <option value="BSI Βακτηριαιμία (1 μη 'δερματικό' παθογόνο ή 2 'δερματικά' παθογόνα)">BSI Βακτηριαιμία (1 μη 'δερματικό' παθογόνο ή 2 'δερματικά' παθογόνα)</option>
+                        <option value="C-CVC Σχετιζόμενη με ΚΦΚ (θετική κ/α άκρου ή βελτίωση σε 48h)">C-CVC Σχετιζόμενη με ΚΦΚ (θετική κ/α άκρου ή βελτίωση σε 48h)</option>
+                        <option value="C-PVC Σχετιζόμενη με ΠΦΚ">C-PVC Σχετιζόμενη με ΠΦΚ</option>
+                        <option value="S-PUL Δευτεροπαθής σε Λοίμωξη Αναπνευστικού">S-PUL Δευτεροπαθής σε Λοίμωξη Αναπνευστικού</option>
+                        <option value="S-UTI Δευτεροπαθής σε Λοίμωξη Ουροποιητικού">S-UTI Δευτεροπαθής σε Λοίμωξη Ουροποιητικού</option>
+                        <option value="S-DIG Δευτεροπαθής σε Λοίμωξη Γαστρεντερικού">S-DIG Δευτεροπαθής σε Λοίμωξη Γαστρεντερικού</option>
+                        <option value="S-SSI Δευτεροπαθής σε Λοίμωξη Χειρουργικού Πεδίου">S-SSI Δευτεροπαθής σε Λοίμωξη Χειρουργικού Πεδίου</option>
+                        <option value="S-SST Δευτεροπαθής σε Λοίμωξη Δέρματος- Μαλακών Μορίων">S-SST Δευτεροπαθής σε Λοίμωξη Δέρματος- Μαλακών Μορίων</option>
+                        <option value="S-OTH Δευτεροπαθής σε άλλη λοίμωξη">S-OTH Δευτεροπαθής σε άλλη λοίμωξη</option>
+                        <option value="UO Άγνωστης προέλευσης (έγινε διερεύνηση)">UO Άγνωστης προέλευσης (έγινε διερεύνηση)</option>
+                        <option value="UNK Άγνωστης προέλευσης (δεν έγινε διερεύνηση)">UNK Άγνωστης προέλευσης (δεν έγινε διερεύνηση)</option>
+                        <option value="CRI1-CVC Τοπική λοίμωξη ΚΦΚ (θετική κ/α άκρου και πύον εισόδου)">CRI1-CVC Τοπική λοίμωξη ΚΦΚ (θετική κ/α άκρου και πύον εισόδου)</option>
+                        <option value="CRI2-CVC Γενικευμένη λοίμωξη ΚΦΚ (θετική κ/α άκρου και βελτίωση σε 48h)">CRI2-CVC Γενικευμένη λοίμωξη ΚΦΚ (θετική κ/α άκρου και βελτίωση σε 48h)</option>
+                        <option value="CRI3-CVC Βακτηριαιμία 48h πριν ή μετά την αφαίρεση και ίδιο μικρόβιο αίμα και ΚΦΚ">CRI3-CVC Βακτηριαιμία 48h πριν ή μετά την αφαίρεση και ίδιο μικρόβιο αίμα και ΚΦΚ</option>
+                        <option value="CRI1-PVC Τοπική λοίμωξη ΠΦΚ (θετική κ/α άκρου και πύον εισόδου)">CRI1-PVC Τοπική λοίμωξη ΠΦΚ (θετική κ/α άκρου και πύον εισόδου)</option>
+                        <option value="CRI2-PVC Γενικευμένη λοίμωξη ΠΦΚ (θετική κ/α άκρου και βελτίωση σε 48h)">CRI2-PVC Γενικευμένη λοίμωξη ΠΦΚ (θετική κ/α άκρου και βελτίωση σε 48h)</option>
+                        <option value="CRI3-PVC Βακτηριαιμία 48h πριν ή μετά την αφαίρεση και ίδιο μικρόβιο αίμα και ΠΦΚ">CRI3-PVC Βακτηριαιμία 48h πριν ή μετά την αφαίρεση και ίδιο μικρόβιο αίμα και ΠΦΚ</option>
+                        <option value="BJ-BONE Οστεομυελίτιδα">BJ-BONE Οστεομυελίτιδα</option>
+                        <option value="BJ-JNT Άρθρωση ή αρθρικός θύλακος">BJ-JNT Άρθρωση ή αρθρικός θύλακος</option>
+                        <option value="BJ-DISC Σπονδυλοδισκίτιδα">BJ-DISC Σπονδυλοδισκίτιδα</option>
+                        <option value="CNS-IC Ενδοκράνια λοίμωξη (κ/α ιστού μήνιγγας, πύου)">CNS-IC Ενδοκράνια λοίμωξη (κ/α ιστού μήνιγγας, πύου)</option>
+                        <option value="CNS-MEN Μηνιγγίτιδα ή κοιλιίτιδα (κ/α ΕΝΥ)">CNS-MEN Μηνιγγίτιδα ή κοιλιίτιδα (κ/α ΕΝΥ)</option>
+                        <option value="CNS-SA Νωτιαίο απόστημα (επι- υπο-σκληρίδιο) χωρίς μηνιγγίτιδα">CNS-SA Νωτιαίο απόστημα (επι- υπο-σκληρίδιο) χωρίς μηνιγγίτιδα</option>
+                        <option value="CVS-VASC Αγγειακή λοίμωξη (κ/α αγγείου ή εμφυτεύματος με αρν. αιμοκ/α)">CVS-VASC Αγγειακή λοίμωξη (κ/α αγγείου ή εμφυτεύματος με αρν. αιμοκ/α)</option>
+                        <option value="CVS-ENDO Ενδοκαρδίτιδα">CVS-ENDO Ενδοκαρδίτιδα</option>
+                        <option value="CVS-CARD Μυοκαρδίτιδα ή περικαρδίτιδα">CVS-CARD Μυοκαρδίτιδα ή περικαρδίτιδα</option>
+                        <option value="CVS-MED Μεσοθωρακίτιδα">CVS-MED Μεσοθωρακίτιδα</option>
+                        <option value="EENT-CONJ Επιπεφυκίτιδα">EENT-CONJ Επιπεφυκίτιδα</option>
+                        <option value="EENT-EYE Οφθαλμική λοίμωξη, εκτός επιπεφυκίτιδας">EENT-EYE Οφθαλμική λοίμωξη, εκτός επιπεφυκίτιδας</option>
+                        <option value="EENT-EAR Ωτίτιδα ή μαστοειδίτιδα">EENT-EAR Ωτίτιδα ή μαστοειδίτιδα</option>
+                        <option value="EENT-ORAL Λοίμωξη στοματικής κοιλότητας (στόμα, γλώσσα, ούλα)">EENT-ORAL Λοίμωξη στοματικής κοιλότητας (στόμα, γλώσσα, ούλα)</option>
+                        <option value="EENT-SINU Παραρρινοκολπίτιδα">EENT-SINU Παραρρινοκολπίτιδα</option>
+                        <option value="EENT-UR Ανώτερου αναπνευστικού (φαρυγγίτιδα, λαρυγγίτιδα, επιγλωττίτιδα)">EENT-UR Ανώτερου αναπνευστικού (φαρυγγίτιδα, λαρυγγίτιδα, επιγλωττίτιδα)</option>
+                        <option value="LRI-BRON Βρογχίτιδα, τραχειοβρογχίτιδα, βρογχιολίτιδα, τραχειίτιδα, χωρίς πνευμονία">LRI-BRON Βρογχίτιδα, τραχειοβρογχίτιδα, βρογχιολίτιδα, τραχειίτιδα, χωρίς πνευμονία</option>
+                        <option value="LRI-LUNG Άλλη λοίμωξη κατωτέρου (απόστημα- εμπύημα)">LRI-LUNG Άλλη λοίμωξη κατωτέρου (απόστημα- εμπύημα)</option>
+                        <option value="GI-CDI Λοίμωξη από Clostridioides difficile">GI-CDI Λοίμωξη από Clostridioides difficile</option>
+                        <option value="GI-GE Γαστρεντερίτιδα">GI-GE Γαστρεντερίτιδα</option>
+                        <option value="GI-GIT Λοίμωξη ΓΕΣ (οισοφάγος, στόμαχος, λεπτό και παχύ έντερο, ορθό) (π.χ εκκολπωματίτιδα, απόστημα)">GI-GIT Λοίμωξη ΓΕΣ (οισοφάγος, στόμαχος, λεπτό και παχύ έντερο, ορθό) (π.χ εκκολπωματίτιδα, απόστημα)</option>
+                        <option value="GI-HEP Ηπατίτδα">GI-HEP Ηπατίτδα</option>
+                        <option value="GI-IAB Ενδοκοιλιακή λοίμωξη (χοληδόχος, χοληφόρα, ήπαρ, πάγκρεας, περιτόναιο, υποδιαφραγματικά)">GI-IAB Ενδοκοιλιακή λοίμωξη (χοληδόχος, χοληφόρα, ήπαρ, πάγκρεας, περιτόναιο, υποδιαφραγματικά)</option>
+                        <option value="REPR-EMET Ενδομητρίτιδα">REPR-EMET Ενδομητρίτιδα</option>
+                        <option value="REPR-EPIS Λοίμωξη περινεοτομής">REPR-EPIS Λοίμωξη περινεοτομής</option>
+                        <option value="REPR-VCUF Κολπικού κολοβώματος (μετά υστερεκτομή)">REPR-VCUF Κολπικού κολοβώματος (μετά υστερεκτομή)</option>
+                        <option value="REPR-OREP Λοιμώξεις αναπαραγωγικού (προστατίτιδα, επιδιδυμίτιδα, σαλπιγγίτιδα)">REPR-OREP Λοιμώξεις αναπαραγωγικού (προστατίτιδα, επιδιδυμίτιδα, σαλπιγγίτιδα)</option>
+                        <option value="SST-SKIN Λοίμωξη δέρματος">SST-SKIN Λοίμωξη δέρματος</option>
+                        <option value="SST-ST Μαλακών μορίων (νεκρ. Απονευρωσίτιδα, κυτταρίτιδα, λεμφαγγειίτιδα)">SST-ST Μαλακών μορίων (νεκρ. Απονευρωσίτιδα, κυτταρίτιδα, λεμφαγγειίτιδα)</option>
+                        <option value="SST-DECU Λοίμωξη έλκους κατάκλισης (επιφανειακή ή εν τω βάθει)">SST-DECU Λοίμωξη έλκους κατάκλισης (επιφανειακή ή εν τω βάθει)</option>
+                        <option value="SST-BURN Επί εγκαύματος">SST-BURN Επί εγκαύματος</option>
+                        <option value="SST-BRST Μαστίτιδα ή απόστημα">SST-BRST Μαστίτιδα ή απόστημα</option>
+                        <option value="SYS-DI Διάσπαρτη λοίμωξη (κυρίως ιογενής)">SYS-DI Διάσπαρτη λοίμωξη (κυρίως ιογενής)</option>
+                        <option value="SYS-CSEP Κλινική σήψη υπό θεραπεία χωρίς εμφανή εστία (Ορισμός τελευταίας λύσης)">SYS-CSEP Κλινική σήψη υπό θεραπεία χωρίς εμφανή εστία (Ορισμός τελευταίας λύσης)</option>
+                        <option value="NEO-CSEP Κλινική σήψη σε νεογνά">NEO-CSEP Κλινική σήψη σε νεογνά</option>
+                        <option value="NEO-LCBI Εργαστηριακά επιβεβαιωμένη βακτηριαιμία, non-CNS σε νεογνά">NEO-LCBI Εργαστηριακά επιβεβαιωμένη βακτηριαιμία, non-CNS σε νεογνά</option>
+                        <option value="NEO-CNSB Εργαστηριακά επιβεβαιωμένη βακτηριαιμία, CNS σε νεογνά">NEO-CNSB Εργαστηριακά επιβεβαιωμένη βακτηριαιμία, CNS σε νεογνά</option>
+                <option value="NEO-NEC">NEO-NEC Νεκρωτική εντεροκολίτιδα σε νεογνά</option>
+            </select>
+            <label for="infStart">Start Date:</label>
+            <input type="date" id="infStart">
+        </div>
+        <div class="form-row">
+            <label for="infEnd">End Date:</label>
+            <input type="date" id="infEnd">
+            <label for="infEvidence">Evidence:</label>
+            <input type="text" id="infEvidence">
+        </div>
+        <div class="form-actions">
+    <button onclick="showInfectionForm()" class="btn-infection-custom">Add Infection</button>
+            <button onclick="hideInfectionForm()" class="btn-default">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Nested Infection/Antibiotic Display -->
+    <div id="infectionsDisplay">
+        <!-- Infections will be dynamically populated here -->
+    </div>
+
+    <!-- Antibiotic Form (Modified) -->
+    <div id="antibioticForm" class="hidden antibiotic-form-container">
+        <h3>Add Antibiotic</h3>
+        <div class="form-row">
+            <label for="abInfection">Infection:</label>
+            <select id="abInfection"></select>
+            <label for="abName">Name:</label>
+            <select id="abName">
+                <option value="">-- Select Antibiotic --</option>
+            </select>
+            <label for="abType">Type:</label>
+            <select id="abType">
+                <option value="">-- Select Type --</option>
+                <option value="empirical">empirical</option>
+                <option value="preemptive">preemptive</option>
+                <option value="targeted">targeted</option>
+                <option value="medical prophylaxis">medical prophylaxis</option>
+                <option value="surgical prophylaxis">surgical prophylaxis</option>
+                <option value="gastrokinetic">gastrokinetic</option>
+            </select>
+        </div>
+        <div class="form-row">
+            <label for="abDose">Dose:</label>
+            <input type="number" step="0.25" id="abDose">
+            <label for="abUnits">Units:</label>
+            <select id="abUnits">
+                <option value="">-- Select Units --</option>
+                <option value="g">g</option>
+                <option value="MU">MU</option>
+            </select>
+            <label for="abTimesPerDay">Times/Day:</label>
+            <select id="abTimesPerDay">
+                <option value="">-- Select --</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+            </select>
+        </div>
+        <div class="form-row">
+            <label for="abRoute">Route:</label>
+            <select id="abRoute">
+                <option value="">-- Select Route --</option>
+                <option value="IV">IV</option>
+                <option value="P.OS">P.OS</option>
+                <option value="NEBS">NEBS</option>
+                <option value="RECT">RECT</option>
+            </select>
+            <label for="abStart">Start Date:</label>
+            <input type="date" id="abStart">
+            <label for="abEnd">End Date:</label>
+            <input type="date" id="abEnd">
+        </div>
+        <div class="form-actions">
+            <button onclick="addAntibioticEntry()" class="btn-primary">Add Antibiotic</button>
+            <button onclick="hideAntibioticForm()" class="btn-default">Cancel</button>
+        </div>
+    </div>
+
+    <div class="form-actions">
+    <button onclick="showInfectionForm()" class="btn-orange">New Infection</button>
+  </div>
+</div>
+
+        <!-- ✅ FOREIGN BODY SECTION -->
+<div id="foreignBodySection" class="section">
+  <h3>Foreign Bodies</h3>
+            <table id="foreignBodiesTable">
+                <thead>
+                    <tr>
+                        <th>Device Type</th>
+                        <th>Insertion Date</th>
+                        <th>Removal Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+
+            <div id="foreignBodyForm" class="hidden foreign-body-form-container">
+                <h3>Add Foreign Body</h3>
+                <div class="form-row">
+                    <label for="fbDeviceType">Device Type:</label>
+                    <select id="fbDeviceType">
+                        <option value="">-- Select Device --</option>
+                        <option value="CVC">CVC</option>
+                        <option value="PVC">PVC</option>
+                        <option value="Arterial Line">Arterial Line</option>
+                        <option value="Urine Catheter">Urine Catheter</option>
+                        <option value="Ventilator">Ventilator</option>
+                        <option value="Nasogastric">Nasogastric</option>
+                        <option value="Temporary Pacemaker">Temp Pacemaker</option>
+                        <option value="Hemodialysis Catheter">Hemodialysis Catheter</option>
+                    </select>
+                    <label for="fbInsertionDate">Insertion Date:</label>
+                    <input type="date" id="fbInsertionDate">
+                </div>
+                <div class="form-row">
+                    <label for="fbRemovalDate">Removal Date:</label>
+                    <input type="date" id="fbRemovalDate">
+                    <div class="form-actions">
+                        <button onclick="addForeignBodyEntry()" class="btn-primary">Add Foreign Body</button>
+                        <button onclick="hideForeignBodyForm()" class="btn-default">Cancel</button>
+                    </div>
+                </div>
+            </div>
+    <div class="form-actions" style="margin-top: 12px;">
+    <button onclick="showForeignBodyForm();" class="btn-orange">New Foreign Body</button>
+  </div>
+  </div>
+  
+
+        <!-- ✅ CLINICAL DATA SECTION -->
+<div id="clinicalDataSection" class="section">
+  <h3>Clinical Data</h3>
+
+  <table id="clinicalDataTable">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Temp (°C)</th>
+        <th>Noradrenaline (mL/h)</th>
+        <th>WBC (x10⁹/L)</th>
+        <th>CRP (mg/L)</th>
+        <th>PCT (ng/mL)</th>
+        <th>Hgb (g/dL)</th>
+        <th>Urea (mg/dL)</th>
+        <th>Creatinine (mg/dL)</th>
+        <th>PEEP (cmH₂O)</th>
+        <th>pO2 (mmHg)</th>
+        <th>FiO2 (%)</th>
+        <th>p/f Ratio</th>
+        <th>Weight Used (kg)</th>
+        <th>CrCl (mL/min)</th>
+        <th>MeasCrCl (mL/min)</th>
+        <th>NoraDose (μg/kg/min)</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <div id="clinicalDataForm" class="hidden clinical-data-form-container">
+    <h3>Add Clinical Data</h3>
+
+    <div class="form-row">
+      <label for="cdDate">Date:</label>
+      <input type="date" id="cdDate">
+      <label for="cdTemperature">Temp (°C):</label>
+      <input type="number" step="0.1" id="cdTemperature">
+      <label for="cdNoradrenaline">Noradrenaline (ml/h):</label>
+      <input type="number" step="0.1" id="cdNoradrenaline">
+    </div>
+
+    <div class="form-row">
+      <label for="cdWBC">WBC (x10⁹/L):</label>
+      <input type="number" step="0.1" id="cdWBC">
+      <label for="cdCRP">CRP (mg/L):</label>
+      <input type="number" step="1" id="cdCRP">
+      <label for="cdPCT">PCT (ng/mL):</label>
+      <input type="number" step="0.01" id="cdPCT">
+      <label for="cdHgb">Hgb (g/dL):</label>
+      <input type="number" step="0.1" id="cdHgb">
+    </div>
+
+    <div class="form-row">
+      <label for="cdUrea">Urea (mg/dL):</label>
+      <input type="number" step="1" id="cdUrea">
+      <label for="cdCreatinine">Creatinine (mg/dL):</label>
+      <input type="number" step="0.1" id="cdCreatinine">
+      <label for="cdMeasCrCl">Measured Clearance (mL/min):</label>
+      <input type="number" step="1" id="cdMeasCrCl">
+    </div>
+
+    <div class="form-row">
+      <label for="cdPEEP">PEEP (cmH₂O):</label>
+      <input type="number" step="0.5" id="cdPEEP">
+      <label for="cdPO2">pO2 (mmHg):</label>
+      <input type="number" step="1" id="cdPO2">
+      <label for="cdFiO2">FiO2 (%):</label>
+      <input type="number" step="5" id="cdFiO2">
+    </div>
+
+    <div class="form-actions">
+      <button onclick="addClinicalDataEntry()" class="btn-primary">Add Clinical Data</button>
+      <button onclick="hideClinicalDataForm()" class="btn-default">Cancel</button>
+    </div>
+  </div>
+
+  <div class="form-actions" style="margin-top: 12px;">
+    <button onclick="showClinicalDataForm();" class="btn-orange">New Clinical Data</button>
+  </div>
+</div>
+
+
+
+    <!-- ✅ DATA MANAGEMENT -->
+<div class="section data-management">
+  <h2>Data Management</h2>
+  <button onclick="saveAllData()" class="btn-success">Save Data</button>
+  <button onclick="exportToExcel()" class="btn-primary">Export to Excel</button>
+  <button onclick="importData()" class="btn-primary">Import Data</button>
+  <button onclick="clearAllData()" class="btn-danger">Clear All Data</button>
+</div>
+
+
+    <script>
+    // Define the shared antibiotic list
+    const antibiotics = [
+        "Amikacin", "Amoxicillin", "Amoxicillin/clavulanate", "Ampicillin", "Ampicillin/sulbactam", "Azithromycin",
+        "Aztreonam", "Cefepime", "Cefiderocol", "Cefixime", "Cefotaxime", "Ceftazidime", "Ceftazidime/Avibactam",
+        "Ceftolozane/tazobactam", "Ceftriaxone", "Cefuroxime", "Ciprofloxacin", "Clarithromycin", "Clindamycin",
+        "Colistin", "Dalbavancin", "Daptomycin", "Doxycycline", "Doripenem", "Ertapenem", "Erythromycin",
+        "Eravacycline", "Fosfomycin", "Gentamicin", "Imipenem/cilastatin", "Levofloxacin", "Linezolid", "Meropenem",
+        "Methicillin", "Metronidazole", "Minocycline", "Moxifloxacin", "Nitrofurantoin", "Ofloxacin", "Penicillin",
+        "Piperacillin/tazobactam", "Rifampin", "Sulfamethoxazole-trimethoprim (Co-trimoxazole)", "Tetracycline",
+        "Tigecycline", "Tobramycin", "Vancomycin", "Amphotericin B (IV)", "Anidulafungin (IV)", "Caspofungin (IV)",
+        "Fluconazole", "Griseofulvin", "Itraconazole", "Micafungin", "Posaconazole", "Voriconazole", "Acyclovir",
+        "Amantadine", "Cidofovir", "Famciclovir", "Foscarnet", "Ganciclovir", "Oseltamivir", "Ribavirin",
+        "Rimantadine", "Valacyclovir", "Zanamivir"
+    ];
+    const awareClassification = {
+  "Amikacin": "Access",
+  "Amoxicillin": "Access",
+  "Amoxicillin/clavulanate": "Access",
+  "Ampicillin": "Access",
+  "Ampicillin/sulbactam": "Access",
+  "Azithromycin": "Watch",
+  "Aztreonam": "Reserve",
+  "Cefepime": "Watch",
+  "Cefiderocol": "Reserve",
+  "Cefixime": "Watch",
+  "Cefotaxime": "Watch",
+  "Ceftazidime": "Watch",
+  "Ceftazidime/Avibactam": "Reserve",
+  "Ceftolozane/tazobactam": "Reserve",
+  "Ceftriaxone": "Watch",
+  "Cefuroxime": "Watch",
+  "Ciprofloxacin": "Watch",
+  "Clarithromycin": "Watch",
+  "Clindamycin": "Access",
+  "Colistin": "Reserve",
+  "Dalbavancin": "Reserve",
+  "Daptomycin": "Reserve",
+  "Doxycycline": "Access",
+  "Doripenem": "Watch",
+  "Ertapenem": "Watch",
+  "Erythromycin": "Watch",
+  "Eravacycline": "Reserve",
+  "Fosfomycin": "Watch", // if IV: "Reserve"
+  "Gentamicin": "Access",
+  "Imipenem/cilastatin": "Watch",
+  "Levofloxacin": "Watch",
+  "Linezolid": "Reserve",
+  "Meropenem": "Watch",
+  "Metronidazole": "Access",
+  "Minocycline": "Watch", // if IV: "Reserve"
+  "Moxifloxacin": "Watch",
+  "Nitrofurantoin": "Access",
+  "Ofloxacin": "Watch",
+  "Penicillin": "Access",
+  "Piperacillin/tazobactam": "Watch",
+  "Rifampin": "Watch",
+  "Sulfamethoxazole-trimethoprim (Co-trimoxazole)": "Access",
+  "Tetracycline": "Access",
+  "Tigecycline": "Reserve",
+  "Tobramycin": "Watch",
+  "Vancomycin": "Watch"
+};
+const antibioticDDDs = {
+  "Amikacin": 1,
+  "Amoxicillin": 3,
+  "Amoxicillin/clavulanate": 3,
+  "Ampicillin": 6,
+  "Ampicillin/sulbactam": 6,
+  "Azithromycin": 0.5,
+  "Aztreonam": 4,
+  "Cefepime": 4,
+  "Cefiderocol": 6,
+  "Cefixime": 0.4,
+  "Cefotaxime": 4,
+  "Ceftazidime": 4,
+  "Ceftazidime/Avibactam": 6,
+  "Ceftolozane/tazobactam": 3,
+  "Ceftriaxone": 2,
+  "Cefuroxime": 3,
+  "Ciprofloxacin": 0.8,
+  "Clarithromycin": 1,
+  "Clindamycin": 1.8,
+  "Colistin": 9,
+  "Dalbavancin": 1.5,
+  "Daptomycin": 0.28,
+  "Doxycycline": 0.1,
+  "Doripenem": 1.5,
+  "Ertapenem": 1,
+  "Erythromycin": 1,
+  "Eravacycline": 0.14,
+  "Fosfomycin": 8,
+  "Gentamicin": 0.24,
+  "Imipenem/cilastatin": 2,
+  "Levofloxacin": 0.5,
+  "Linezolid": 1.2,
+  "Meropenem": 3,
+  "Metronidazole": 1.5,
+  "Minocycline": 0.2,
+  "Moxifloxacin": 0.4,
+  "Nitrofurantoin": 0.2,
+  "Ofloxacin": 0.4,
+  "Penicillin": 3.6,
+  "Piperacillin/tazobactam": 14,
+  "Rifampin": 0.6,
+  "Sulfamethoxazole-trimethoprim (Co-trimoxazole)": 0.4,
+  "Tetracycline": 1,
+  "Tigecycline": 0.1,
+  "Tobramycin": 0.24,
+  "Vancomycin": 2
+};
+const antibioticASI = {
+  "Amikacin": 6,
+  "Amoxicillin": 2,
+  "Amoxicillin/clavulanate": 6,
+  "Ampicillin": 2,
+  "Ampicillin/sulbactam": 6,
+  "Azithromycin": 4,
+  "Aztreonam": 3,
+  "Cefepime": 6,
+  "Cefiderocol": 6,
+  "Cefixime": 3,
+  "Cefotaxime": 5,
+  "Ceftazidime": 4,
+  "Ceftazidime/Avibactam": 6,
+  "Ceftolozane/tazobactam": 7,
+  "Ceftriaxone": 5,
+  "Cefuroxime": 4,
+  "Ciprofloxacin": 8,
+  "Clarithromycin": 4,
+  "Clindamycin": 4,
+  "Colistin": 5,
+  "Dalbavancin": null,
+  "Daptomycin": 5,
+  "Doxycycline": 5,
+  "Doripenem": null,
+  "Ertapenem": 9,
+  "Erythromycin": 2,
+  "Eravacycline": null,
+  "Fosfomycin": null,
+  "Gentamicin": 5,
+  "Imipenem/cilastatin": 11,
+  "Levofloxacin": 9,
+  "Linezolid": 6,
+  "Meropenem": 10,
+  "Metronidazole": 2,
+  "Minocycline": 5,
+  "Moxifloxacin": 10,
+  "Nitrofurantoin": null,
+  "Ofloxacin": null,
+  "Penicillin": 2,
+  "Piperacillin/tazobactam": 8,
+  "Rifampin": 3,
+  "Sulfamethoxazole-trimethoprim (Co-trimoxazole)": 4,
+  "Tetracycline": 1,
+  "Tigecycline": 13,
+  "Tobramycin": 5,
+  "Vancomycin": 5
+};
+
+    // Initialize data structures
+let patients = Array.from({ length: 19 }, () => []);
+let currentPatientIndex = Array(19).fill(0);
+let bedIndex = null;
+let editing = false;
+let currentCulture = null;          // Add this
+let selectedCultureIndex = null;    // Add this
+let selectedOrganismIndex = null;   // Add this
+let currentResistances = [];
+let currentOrganism = null;
+let currentPatientEditIndex = null;
+let editingForeignBodyIndex = null;
+let editingClinicalDataIndex = null;
+
+    // Populate antibiotic dropdowns
+    function populateAntibioticDropdowns() {
+        const cultureSelect = document.getElementById('cultureAntibiotic');
+        const abSelect = document.getElementById('abName');
+        
+        antibiotics.forEach(antibiotic => {
+            const option1 = document.createElement('option');
+            option1.value = antibiotic;
+            option1.textContent = antibiotic;
+            cultureSelect.appendChild(option1);
+            
+            const option2 = document.createElement('option');
+            option2.value = antibiotic;
+            option2.textContent = antibiotic;
+            abSelect.appendChild(option2);
+        });
+    }
+
+    // Load data from localStorage on startup
+    function loadAllData() {
+    const savedPatients = localStorage.getItem('icuPatients');
+    const savedIndices = localStorage.getItem('currentPatientIndices');
+    
+    if (savedPatients) {
+        patients = JSON.parse(savedPatients);
+        patients.forEach(bed => {
+            bed.forEach(patient => {
+                if (!patient.cultures) patient.cultures = [];
+                if (!patient.infections) patient.infections = []; // Initialize infections
+                if (!patient.foreignBodies) patient.foreignBodies = [];
+                if (!patient.clinicalData) patient.clinicalData = [];
+                if (!patient.gender) patient.gender = '';
+                if (!patient.height) patient.height = '';
+                if (!patient.weight) patient.weight = '';
+                if (!patient.bmi) patient.bmi = '';
+                // Migrate old antibiotics to infections if needed
+                if (patient.antibiotics && patient.antibiotics.length > 0 && patient.infections.length === 0) {
+                    patient.infections.push({
+                        id: `inf_${Date.now()}`,
+                        type: "Unknown",
+                        start: patient.antibiotics[0].infStart || patient.antibiotics[0].start,
+                        end: patient.antibiotics[0].infEnd || patient.antibiotics[0].end,
+                        evidence: "Migrated from old antibiotics",
+                        antibiotics: patient.antibiotics
+                    });
+                    patient.antibiotics = []; // Clear old antibiotics
+                }
+            });
+        });
+    }
+    if (savedIndices) currentPatientIndex = JSON.parse(savedIndices);
+}
+    function toggleInfection(header) {
+    header.parentElement.classList.toggle('collapsed');
+}
+let editingInfectionIndex = null;
+
+function showInfectionForm() {
+    // Hide any existing forms
+    document.getElementById('antibioticForm').classList.add('hidden');
+    const existingForm = document.getElementById('currentInfectionForm');
+    if (existingForm) existingForm.remove();
+
+    // Create form container
+    const formContainer = document.createElement('div');
+    formContainer.className = 'infection-form-container';
+    formContainer.id = 'currentInfectionForm';
+    
+    formContainer.innerHTML = `
+        <h3>Add Infection Episode</h3>
+        <div class="form-row">
+            <label for="dynamicInfType">Infection Type:</label>
+            <select id="dynamicInfType" required>
+                <option value="">-- Select Infection Type --</option>
+                <option value="Medical prophylaxis">Medical prophylaxis</option>
+                <option value="Surgical prophylaxis">Surgical prophylaxis</option>
+                <option value="SSI-S Επιφανειακή λοίμωξη χειρουργικής τομής">SSI-S Επιφανειακή λοίμωξη χειρουργικής τομής</option>
+                <option value="SSI-D Εν τω βάθει λοίμωξη χειρουργικής τομής">SSI-D Εν τω βάθει λοίμωξη χειρουργικής τομής</option>
+                        <option value="SSI-O Λοίμωξη οργάνων ή ανατομικών χώρων χειρουργικού πεδίου">SSI-O Λοίμωξη οργάνων ή ανατομικών χώρων χειρουργικού πεδίου</option>
+                        <option value="PN1 Ποσοτική καλλιέργεια ελάχιστα επιμολυσμένου δείγματος (BAL)">PN1 Ποσοτική καλλιέργεια ελάχιστα επιμολυσμένου δείγματος (BAL)</option>
+                        <option value="PN2 Ποσοτική καλλιέργεια πιθανά επιμολυσμένου δείγματος">PN2 Ποσοτική καλλιέργεια πιθανά επιμολυσμένου δείγματος</option>
+                        <option value="PN3 Εναλλακτικές μικροβιολογικές μέθοδοι">PN3 Εναλλακτικές μικροβιολογικές μέθοδοι</option>
+                        <option value="PN4 Μη ποσοτική καλλιέργεια βρογχικών ή πτυέλων">PN4 Μη ποσοτική καλλιέργεια βρογχικών ή πτυέλων</option>
+                        <option value="PN5 Όχι θετική μικροβιολογική εξέταση">PN5 Όχι θετική μικροβιολογική εξέταση</option>
+                        <option value="COV-ASY Ασυμπτωματική νόσηση">COV-ASY Ασυμπτωματική νόσηση</option>
+                        <option value="COV-MM Ήπια- μέτρια (Κορεσμός ≥92% στον αέρα)">COV-MM Ήπια- μέτρια (Κορεσμός ≥92% στον αέρα)</option>
+                        <option value="COV-SEV Σοβαρή/ κρίσιμη νόσος (Κορεσμός <92% ή ανάγκη για οξυγόνο)">COV-SEV Σοβαρή/ κρίσιμη νόσος (Κορεσμός <92% ή ανάγκη για οξυγόνο)</option>
+                        <option value="UTI-A Συμπτωματική ουρολοίμωξη μικροβιολογικά επιβεβαιωμένη (≥10^5)">UTI-A Συμπτωματική ουρολοίμωξη μικροβιολογικά επιβεβαιωμένη (≥10^5)</option>
+                        <option value="UTI-B Συμπτωματική ουρολοίμωξη μη επιβεβαιωμένη (<10^5)">UTI-B Συμπτωματική ουρολοίμωξη μη επιβεβαιωμένη (<10^5)</option>
+                        <option value="BSI Βακτηριαιμία (1 μη 'δερματικό' παθογόνο ή 2 'δερματικά' παθογόνα)">BSI Βακτηριαιμία (1 μη 'δερματικό' παθογόνο ή 2 'δερματικά' παθογόνα)</option>
+                        <option value="C-CVC Σχετιζόμενη με ΚΦΚ (θετική κ/α άκρου ή βελτίωση σε 48h)">C-CVC Σχετιζόμενη με ΚΦΚ (θετική κ/α άκρου ή βελτίωση σε 48h)</option>
+                        <option value="C-PVC Σχετιζόμενη με ΠΦΚ">C-PVC Σχετιζόμενη με ΠΦΚ</option>
+                        <option value="S-PUL Δευτεροπαθής σε Λοίμωξη Αναπνευστικού">S-PUL Δευτεροπαθής σε Λοίμωξη Αναπνευστικού</option>
+                        <option value="S-UTI Δευτεροπαθής σε Λοίμωξη Ουροποιητικού">S-UTI Δευτεροπαθής σε Λοίμωξη Ουροποιητικού</option>
+                        <option value="S-DIG Δευτεροπαθής σε Λοίμωξη Γαστρεντερικού">S-DIG Δευτεροπαθής σε Λοίμωξη Γαστρεντερικού</option>
+                        <option value="S-SSI Δευτεροπαθής σε Λοίμωξη Χειρουργικού Πεδίου">S-SSI Δευτεροπαθής σε Λοίμωξη Χειρουργικού Πεδίου</option>
+                        <option value="S-SST Δευτεροπαθής σε Λοίμωξη Δέρματος- Μαλακών Μορίων">S-SST Δευτεροπαθής σε Λοίμωξη Δέρματος- Μαλακών Μορίων</option>
+                        <option value="S-OTH Δευτεροπαθής σε άλλη λοίμωξη">S-OTH Δευτεροπαθής σε άλλη λοίμωξη</option>
+                        <option value="UO Άγνωστης προέλευσης (έγινε διερεύνηση)">UO Άγνωστης προέλευσης (έγινε διερεύνηση)</option>
+                        <option value="UNK Άγνωστης προέλευσης (δεν έγινε διερεύνηση)">UNK Άγνωστης προέλευσης (δεν έγινε διερεύνηση)</option>
+                        <option value="CRI1-CVC Τοπική λοίμωξη ΚΦΚ (θετική κ/α άκρου και πύον εισόδου)">CRI1-CVC Τοπική λοίμωξη ΚΦΚ (θετική κ/α άκρου και πύον εισόδου)</option>
+                        <option value="CRI2-CVC Γενικευμένη λοίμωξη ΚΦΚ (θετική κ/α άκρου και βελτίωση σε 48h)">CRI2-CVC Γενικευμένη λοίμωξη ΚΦΚ (θετική κ/α άκρου και βελτίωση σε 48h)</option>
+                        <option value="CRI3-CVC Βακτηριαιμία 48h πριν ή μετά την αφαίρεση και ίδιο μικρόβιο αίμα και ΚΦΚ">CRI3-CVC Βακτηριαιμία 48h πριν ή μετά την αφαίρεση και ίδιο μικρόβιο αίμα και ΚΦΚ</option>
+                        <option value="CRI1-PVC Τοπική λοίμωξη ΠΦΚ (θετική κ/α άκρου και πύον εισόδου)">CRI1-PVC Τοπική λοίμωξη ΠΦΚ (θετική κ/α άκρου και πύον εισόδου)</option>
+                        <option value="CRI2-PVC Γενικευμένη λοίμωξη ΠΦΚ (θετική κ/α άκρου και βελτίωση σε 48h)">CRI2-PVC Γενικευμένη λοίμωξη ΠΦΚ (θετική κ/α άκρου και βελτίωση σε 48h)</option>
+                        <option value="CRI3-PVC Βακτηριαιμία 48h πριν ή μετά την αφαίρεση και ίδιο μικρόβιο αίμα και ΠΦΚ">CRI3-PVC Βακτηριαιμία 48h πριν ή μετά την αφαίρεση και ίδιο μικρόβιο αίμα και ΠΦΚ</option>
+                        <option value="BJ-BONE Οστεομυελίτιδα">BJ-BONE Οστεομυελίτιδα</option>
+                        <option value="BJ-JNT Άρθρωση ή αρθρικός θύλακος">BJ-JNT Άρθρωση ή αρθρικός θύλακος</option>
+                        <option value="BJ-DISC Σπονδυλοδισκίτιδα">BJ-DISC Σπονδυλοδισκίτιδα</option>
+                        <option value="CNS-IC Ενδοκράνια λοίμωξη (κ/α ιστού μήνιγγας, πύου)">CNS-IC Ενδοκράνια λοίμωξη (κ/α ιστού μήνιγγας, πύου)</option>
+                        <option value="CNS-MEN Μηνιγγίτιδα ή κοιλιίτιδα (κ/α ΕΝΥ)">CNS-MEN Μηνιγγίτιδα ή κοιλιίτιδα (κ/α ΕΝΥ)</option>
+                        <option value="CNS-SA Νωτιαίο απόστημα (επι- υπο-σκληρίδιο) χωρίς μηνιγγίτιδα">CNS-SA Νωτιαίο απόστημα (επι- υπο-σκληρίδιο) χωρίς μηνιγγίτιδα</option>
+                        <option value="CVS-VASC Αγγειακή λοίμωξη (κ/α αγγείου ή εμφυτεύματος με αρν. αιμοκ/α)">CVS-VASC Αγγειακή λοίμωξη (κ/α αγγείου ή εμφυτεύματος με αρν. αιμοκ/α)</option>
+                        <option value="CVS-ENDO Ενδοκαρδίτιδα">CVS-ENDO Ενδοκαρδίτιδα</option>
+                        <option value="CVS-CARD Μυοκαρδίτιδα ή περικαρδίτιδα">CVS-CARD Μυοκαρδίτιδα ή περικαρδίτιδα</option>
+                        <option value="CVS-MED Μεσοθωρακίτιδα">CVS-MED Μεσοθωρακίτιδα</option>
+                        <option value="EENT-CONJ Επιπεφυκίτιδα">EENT-CONJ Επιπεφυκίτιδα</option>
+                        <option value="EENT-EYE Οφθαλμική λοίμωξη, εκτός επιπεφυκίτιδας">EENT-EYE Οφθαλμική λοίμωξη, εκτός επιπεφυκίτιδας</option>
+                        <option value="EENT-EAR Ωτίτιδα ή μαστοειδίτιδα">EENT-EAR Ωτίτιδα ή μαστοειδίτιδα</option>
+                        <option value="EENT-ORAL Λοίμωξη στοματικής κοιλότητας (στόμα, γλώσσα, ούλα)">EENT-ORAL Λοίμωξη στοματικής κοιλότητας (στόμα, γλώσσα, ούλα)</option>
+                        <option value="EENT-SINU Παραρρινοκολπίτιδα">EENT-SINU Παραρρινοκολπίτιδα</option>
+                        <option value="EENT-UR Ανώτερου αναπνευστικού (φαρυγγίτιδα, λαρυγγίτιδα, επιγλωττίτιδα)">EENT-UR Ανώτερου αναπνευστικού (φαρυγγίτιδα, λαρυγγίτιδα, επιγλωττίτιδα)</option>
+                        <option value="LRI-BRON Βρογχίτιδα, τραχειοβρογχίτιδα, βρογχιολίτιδα, τραχειίτιδα, χωρίς πνευμονία">LRI-BRON Βρογχίτιδα, τραχειοβρογχίτιδα, βρογχιολίτιδα, τραχειίτιδα, χωρίς πνευμονία</option>
+                        <option value="LRI-LUNG Άλλη λοίμωξη κατωτέρου (απόστημα- εμπύημα)">LRI-LUNG Άλλη λοίμωξη κατωτέρου (απόστημα- εμπύημα)</option>
+                        <option value="GI-CDI Λοίμωξη από Clostridioides difficile">GI-CDI Λοίμωξη από Clostridioides difficile</option>
+                        <option value="GI-GE Γαστρεντερίτιδα">GI-GE Γαστρεντερίτιδα</option>
+                        <option value="GI-GIT Λοίμωξη ΓΕΣ (οισοφάγος, στόμαχος, λεπτό και παχύ έντερο, ορθό) (π.χ εκκολπωματίτιδα, απόστημα)">GI-GIT Λοίμωξη ΓΕΣ (οισοφάγος, στόμαχος, λεπτό και παχύ έντερο, ορθό) (π.χ εκκολπωματίτιδα, απόστημα)</option>
+                        <option value="GI-HEP Ηπατίτδα">GI-HEP Ηπατίτδα</option>
+                        <option value="GI-IAB Ενδοκοιλιακή λοίμωξη (χοληδόχος, χοληφόρα, ήπαρ, πάγκρεας, περιτόναιο, υποδιαφραγματικά)">GI-IAB Ενδοκοιλιακή λοίμωξη (χοληδόχος, χοληφόρα, ήπαρ, πάγκρεας, περιτόναιο, υποδιαφραγματικά)</option>
+                        <option value="REPR-EMET Ενδομητρίτιδα">REPR-EMET Ενδομητρίτιδα</option>
+                        <option value="REPR-EPIS Λοίμωξη περινεοτομής">REPR-EPIS Λοίμωξη περινεοτομής</option>
+                        <option value="REPR-VCUF Κολπικού κολοβώματος (μετά υστερεκτομή)">REPR-VCUF Κολπικού κολοβώματος (μετά υστερεκτομή)</option>
+                        <option value="REPR-OREP Λοιμώξεις αναπαραγωγικού (προστατίτιδα, επιδιδυμίτιδα, σαλπιγγίτιδα)">REPR-OREP Λοιμώξεις αναπαραγωγικού (προστατίτιδα, επιδιδυμίτιδα, σαλπιγγίτιδα)</option>
+                        <option value="SST-SKIN Λοίμωξη δέρματος">SST-SKIN Λοίμωξη δέρματος</option>
+                        <option value="SST-ST Μαλακών μορίων (νεκρ. Απονευρωσίτιδα, κυτταρίτιδα, λεμφαγγειίτιδα)">SST-ST Μαλακών μορίων (νεκρ. Απονευρωσίτιδα, κυτταρίτιδα, λεμφαγγειίτιδα)</option>
+                        <option value="SST-DECU Λοίμωξη έλκους κατάκλισης (επιφανειακή ή εν τω βάθει)">SST-DECU Λοίμωξη έλκους κατάκλισης (επιφανειακή ή εν τω βάθει)</option>
+                        <option value="SST-BURN Επί εγκαύματος">SST-BURN Επί εγκαύματος</option>
+                        <option value="SST-BRST Μαστίτιδα ή απόστημα">SST-BRST Μαστίτιδα ή απόστημα</option>
+                        <option value="SYS-DI Διάσπαρτη λοίμωξη (κυρίως ιογενής)">SYS-DI Διάσπαρτη λοίμωξη (κυρίως ιογενής)</option>
+                        <option value="SYS-CSEP Κλινική σήψη υπό θεραπεία χωρίς εμφανή εστία (Ορισμός τελευταίας λύσης)">SYS-CSEP Κλινική σήψη υπό θεραπεία χωρίς εμφανή εστία (Ορισμός τελευταίας λύσης)</option>
+                        <option value="NEO-CSEP Κλινική σήψη σε νεογνά">NEO-CSEP Κλινική σήψη σε νεογνά</option>
+                        <option value="NEO-LCBI Εργαστηριακά επιβεβαιωμένη βακτηριαιμία, non-CNS σε νεογνά">NEO-LCBI Εργαστηριακά επιβεβαιωμένη βακτηριαιμία, non-CNS σε νεογνά</option>
+                        <option value="NEO-CNSB Εργαστηριακά επιβεβαιωμένη βακτηριαιμία, CNS σε νεογνά">NEO-CNSB Εργαστηριακά επιβεβαιωμένη βακτηριαιμία, CNS σε νεογνά</option>
+                <option value="NEO-NEC">NEO-NEC Νεκρωτική εντεροκολίτιδα σε νεογνά</option>
+            </select>
+        </div>
+        <div class="form-row">
+            <label for="dynamicInfStart">Start Date:</label>
+            <input type="date" id="dynamicInfStart" required value="${new Date().toISOString().split('T')[0]}">
+        </div>
+        <div class="form-row">
+            <label for="dynamicInfEnd">End Date:</label>
+            <input type="date" id="dynamicInfEnd">
+        </div>
+        <div class="form-row">
+            <label for="dynamicInfEvidence">Evidence:</label>
+            <input type="text" id="dynamicInfEvidence" required placeholder="Clinical/lab evidence">
+        </div>
+        <div class="form-actions">
+            <button onclick="validateAndAddInfection()" class="btn-success">Save Infection</button>
+            <button onclick="hideInfectionForm()" class="btn-default">Cancel</button>
+        </div>
+    `;
+    
+    // Insert the form at the end of the antibioticSection, after infectionsDisplay
+    const antibioticSection = document.getElementById('antibioticSection');
+    const infectionsDisplay = document.getElementById('infectionsDisplay');
+    antibioticSection.appendChild(formContainer);
+}   
+
+function validateAndAddInfection() {
+    const type = document.getElementById('dynamicInfType').value;
+    const start = document.getElementById('dynamicInfStart').value;
+    const evidence = document.getElementById('dynamicInfEvidence').value;
+
+    if (!type || !start || !evidence) {
+        alert('Please provide infection type, start date, and evidence.');
+        return;
+    }
+
+    // If validation passes, proceed to add the infection
+    addInfectionEntry();
+}
+
+function hideInfectionForm() {
+    const form = document.getElementById('currentInfectionForm');
+    if (form) form.remove();
+    editingInfectionIndex = null;
+}
+
+function resetInfectionForm() {
+    document.getElementById('infType').value = '';
+    document.getElementById('infStart').value = '';
+    document.getElementById('infEnd').value = '';
+    document.getElementById('infEvidence').value = '';
+    document.querySelector('#infectionForm h3').innerText = 'Add Infection Episode';
+    document.querySelector('#infectionForm .btn-primary').innerText = 'Add Infection';
+    editingInfectionIndex = null;
+}
+
+function addInfectionEntry() {
+    const infection = {
+        id: `inf_${Date.now()}`,
+        type: document.getElementById('dynamicInfType').value,
+        start: document.getElementById('dynamicInfStart').value,
+        end: document.getElementById('dynamicInfEnd').value,
+        evidence: document.getElementById('dynamicInfEvidence').value,
+        antibiotics: []
+    };
+
+    const patient = patients[bedIndex][currentPatientIndex[bedIndex]];
+    if (editingInfectionIndex !== null) {
+        infection.antibiotics = patient.infections[editingInfectionIndex].antibiotics;
+        patient.infections[editingInfectionIndex] = infection;
+    } else {
+        patient.infections.push(infection);
+    }
+
+    saveAllData();
+    populateAntibioticsTable();
+    hideInfectionForm();
+}
+
+function editInfection(index) {
+    const patient = patients[bedIndex][currentPatientIndex[bedIndex]];
+    const infection = patient.infections[index];
+    editingInfectionIndex = index;
+    
+    // Hide any existing forms
+    document.getElementById('antibioticForm').classList.add('hidden');
+    const existingForm = document.getElementById('currentInfectionForm');
+    if (existingForm) existingForm.remove();
+
+    // Create form container
+    const formContainer = document.createElement('div');
+    formContainer.className = 'infection-form-container';
+    formContainer.id = 'currentInfectionForm';
+    
+    formContainer.innerHTML = `
+        <h3>Edit Infection Episode</h3>
+        <div class="form-row">
+            <label>Infection Type:</label>
+            <select id="editInfType">
+                <option value="">-- Select --</option>
+                <option value="Medical prophylaxis">Medical prophylaxis</option>
+                <option value="Surgical prophylaxis">Surgical prophylaxis</option>
+               <option value="SSI-S Επιφανειακή λοίμωξη χειρουργικής τομής">SSI-S Επιφανειακή λοίμωξη χειρουργικής τομής</option>
+                <option value="SSI-D Εν τω βάθει λοίμωξη χειρουργικής τομής">SSI-D Εν τω βάθει λοίμωξη χειρουργικής τομής</option>
+                        <option value="SSI-O Λοίμωξη οργάνων ή ανατομικών χώρων χειρουργικού πεδίου">SSI-O Λοίμωξη οργάνων ή ανατομικών χώρων χειρουργικού πεδίου</option>
+                        <option value="PN1 Ποσοτική καλλιέργεια ελάχιστα επιμολυσμένου δείγματος (BAL)">PN1 Ποσοτική καλλιέργεια ελάχιστα επιμολυσμένου δείγματος (BAL)</option>
+                        <option value="PN2 Ποσοτική καλλιέργεια πιθανά επιμολυσμένου δείγματος">PN2 Ποσοτική καλλιέργεια πιθανά επιμολυσμένου δείγματος</option>
+                        <option value="PN3 Εναλλακτικές μικροβιολογικές μέθοδοι">PN3 Εναλλακτικές μικροβιολογικές μέθοδοι</option>
+                        <option value="PN4 Μη ποσοτική καλλιέργεια βρογχικών ή πτυέλων">PN4 Μη ποσοτική καλλιέργεια βρογχικών ή πτυέλων</option>
+                        <option value="PN5 Όχι θετική μικροβιολογική εξέταση">PN5 Όχι θετική μικροβιολογική εξέταση</option>
+                        <option value="COV-ASY Ασυμπτωματική νόσηση">COV-ASY Ασυμπτωματική νόσηση</option>
+                        <option value="COV-MM Ήπια- μέτρια (Κορεσμός ≥92% στον αέρα)">COV-MM Ήπια- μέτρια (Κορεσμός ≥92% στον αέρα)</option>
+                        <option value="COV-SEV Σοβαρή/ κρίσιμη νόσος (Κορεσμός <92% ή ανάγκη για οξυγόνο)">COV-SEV Σοβαρή/ κρίσιμη νόσος (Κορεσμός <92% ή ανάγκη για οξυγόνο)</option>
+                        <option value="UTI-A Συμπτωματική ουρολοίμωξη μικροβιολογικά επιβεβαιωμένη (≥10^5)">UTI-A Συμπτωματική ουρολοίμωξη μικροβιολογικά επιβεβαιωμένη (≥10^5)</option>
+                        <option value="UTI-B Συμπτωματική ουρολοίμωξη μη επιβεβαιωμένη (<10^5)">UTI-B Συμπτωματική ουρολοίμωξη μη επιβεβαιωμένη (<10^5)</option>
+                        <option value="BSI Βακτηριαιμία (1 μη 'δερματικό' παθογόνο ή 2 'δερματικά' παθογόνα)">BSI Βακτηριαιμία (1 μη 'δερματικό' παθογόνο ή 2 'δερματικά' παθογόνα)</option>
+                        <option value="C-CVC Σχετιζόμενη με ΚΦΚ (θετική κ/α άκρου ή βελτίωση σε 48h)">C-CVC Σχετιζόμενη με ΚΦΚ (θετική κ/α άκρου ή βελτίωση σε 48h)</option>
+                        <option value="C-PVC Σχετιζόμενη με ΠΦΚ">C-PVC Σχετιζόμενη με ΠΦΚ</option>
+                        <option value="S-PUL Δευτεροπαθής σε Λοίμωξη Αναπνευστικού">S-PUL Δευτεροπαθής σε Λοίμωξη Αναπνευστικού</option>
+                        <option value="S-UTI Δευτεροπαθής σε Λοίμωξη Ουροποιητικού">S-UTI Δευτεροπαθής σε Λοίμωξη Ουροποιητικού</option>
+                        <option value="S-DIG Δευτεροπαθής σε Λοίμωξη Γαστρεντερικού">S-DIG Δευτεροπαθής σε Λοίμωξη Γαστρεντερικού</option>
+                        <option value="S-SSI Δευτεροπαθής σε Λοίμωξη Χειρουργικού Πεδίου">S-SSI Δευτεροπαθής σε Λοίμωξη Χειρουργικού Πεδίου</option>
+                        <option value="S-SST Δευτεροπαθής σε Λοίμωξη Δέρματος- Μαλακών Μορίων">S-SST Δευτεροπαθής σε Λοίμωξη Δέρματος- Μαλακών Μορίων</option>
+                        <option value="S-OTH Δευτεροπαθής σε άλλη λοίμωξη">S-OTH Δευτεροπαθής σε άλλη λοίμωξη</option>
+                        <option value="UO Άγνωστης προέλευσης (έγινε διερεύνηση)">UO Άγνωστης προέλευσης (έγινε διερεύνηση)</option>
+                        <option value="UNK Άγνωστης προέλευσης (δεν έγινε διερεύνηση)">UNK Άγνωστης προέλευσης (δεν έγινε διερεύνηση)</option>
+                        <option value="CRI1-CVC Τοπική λοίμωξη ΚΦΚ (θετική κ/α άκρου και πύον εισόδου)">CRI1-CVC Τοπική λοίμωξη ΚΦΚ (θετική κ/α άκρου και πύον εισόδου)</option>
+                        <option value="CRI2-CVC Γενικευμένη λοίμωξη ΚΦΚ (θετική κ/α άκρου και βελτίωση σε 48h)">CRI2-CVC Γενικευμένη λοίμωξη ΚΦΚ (θετική κ/α άκρου και βελτίωση σε 48h)</option>
+                        <option value="CRI3-CVC Βακτηριαιμία 48h πριν ή μετά την αφαίρεση και ίδιο μικρόβιο αίμα και ΚΦΚ">CRI3-CVC Βακτηριαιμία 48h πριν ή μετά την αφαίρεση και ίδιο μικρόβιο αίμα και ΚΦΚ</option>
+                        <option value="CRI1-PVC Τοπική λοίμωξη ΠΦΚ (θετική κ/α άκρου και πύον εισόδου)">CRI1-PVC Τοπική λοίμωξη ΠΦΚ (θετική κ/α άκρου και πύον εισόδου)</option>
+                        <option value="CRI2-PVC Γενικευμένη λοίμωξη ΠΦΚ (θετική κ/α άκρου και βελτίωση σε 48h)">CRI2-PVC Γενικευμένη λοίμωξη ΠΦΚ (θετική κ/α άκρου και βελτίωση σε 48h)</option>
+                        <option value="CRI3-PVC Βακτηριαιμία 48h πριν ή μετά την αφαίρεση και ίδιο μικρόβιο αίμα και ΠΦΚ">CRI3-PVC Βακτηριαιμία 48h πριν ή μετά την αφαίρεση και ίδιο μικρόβιο αίμα και ΠΦΚ</option>
+                        <option value="BJ-BONE Οστεομυελίτιδα">BJ-BONE Οστεομυελίτιδα</option>
+                        <option value="BJ-JNT Άρθρωση ή αρθρικός θύλακος">BJ-JNT Άρθρωση ή αρθρικός θύλακος</option>
+                        <option value="BJ-DISC Σπονδυλοδισκίτιδα">BJ-DISC Σπονδυλοδισκίτιδα</option>
+                        <option value="CNS-IC Ενδοκράνια λοίμωξη (κ/α ιστού μήνιγγας, πύου)">CNS-IC Ενδοκράνια λοίμωξη (κ/α ιστού μήνιγγας, πύου)</option>
+                        <option value="CNS-MEN Μηνιγγίτιδα ή κοιλιίτιδα (κ/α ΕΝΥ)">CNS-MEN Μηνιγγίτιδα ή κοιλιίτιδα (κ/α ΕΝΥ)</option>
+                        <option value="CNS-SA Νωτιαίο απόστημα (επι- υπο-σκληρίδιο) χωρίς μηνιγγίτιδα">CNS-SA Νωτιαίο απόστημα (επι- υπο-σκληρίδιο) χωρίς μηνιγγίτιδα</option>
+                        <option value="CVS-VASC Αγγειακή λοίμωξη (κ/α αγγείου ή εμφυτεύματος με αρν. αιμοκ/α)">CVS-VASC Αγγειακή λοίμωξη (κ/α αγγείου ή εμφυτεύματος με αρν. αιμοκ/α)</option>
+                        <option value="CVS-ENDO Ενδοκαρδίτιδα">CVS-ENDO Ενδοκαρδίτιδα</option>
+                        <option value="CVS-CARD Μυοκαρδίτιδα ή περικαρδίτιδα">CVS-CARD Μυοκαρδίτιδα ή περικαρδίτιδα</option>
+                        <option value="CVS-MED Μεσοθωρακίτιδα">CVS-MED Μεσοθωρακίτιδα</option>
+                        <option value="EENT-CONJ Επιπεφυκίτιδα">EENT-CONJ Επιπεφυκίτιδα</option>
+                        <option value="EENT-EYE Οφθαλμική λοίμωξη, εκτός επιπεφυκίτιδας">EENT-EYE Οφθαλμική λοίμωξη, εκτός επιπεφυκίτιδας</option>
+                        <option value="EENT-EAR Ωτίτιδα ή μαστοειδίτιδα">EENT-EAR Ωτίτιδα ή μαστοειδίτιδα</option>
+                        <option value="EENT-ORAL Λοίμωξη στοματικής κοιλότητας (στόμα, γλώσσα, ούλα)">EENT-ORAL Λοίμωξη στοματικής κοιλότητας (στόμα, γλώσσα, ούλα)</option>
+                        <option value="EENT-SINU Παραρρινοκολπίτιδα">EENT-SINU Παραρρινοκολπίτιδα</option>
+                        <option value="EENT-UR Ανώτερου αναπνευστικού (φαρυγγίτιδα, λαρυγγίτιδα, επιγλωττίτιδα)">EENT-UR Ανώτερου αναπνευστικού (φαρυγγίτιδα, λαρυγγίτιδα, επιγλωττίτιδα)</option>
+                        <option value="LRI-BRON Βρογχίτιδα, τραχειοβρογχίτιδα, βρογχιολίτιδα, τραχειίτιδα, χωρίς πνευμονία">LRI-BRON Βρογχίτιδα, τραχειοβρογχίτιδα, βρογχιολίτιδα, τραχειίτιδα, χωρίς πνευμονία</option>
+                        <option value="LRI-LUNG Άλλη λοίμωξη κατωτέρου (απόστημα- εμπύημα)">LRI-LUNG Άλλη λοίμωξη κατωτέρου (απόστημα- εμπύημα)</option>
+                        <option value="GI-CDI Λοίμωξη από Clostridioides difficile">GI-CDI Λοίμωξη από Clostridioides difficile</option>
+                        <option value="GI-GE Γαστρεντερίτιδα">GI-GE Γαστρεντερίτιδα</option>
+                        <option value="GI-GIT Λοίμωξη ΓΕΣ (οισοφάγος, στόμαχος, λεπτό και παχύ έντερο, ορθό) (π.χ εκκολπωματίτιδα, απόστημα)">GI-GIT Λοίμωξη ΓΕΣ (οισοφάγος, στόμαχος, λεπτό και παχύ έντερο, ορθό) (π.χ εκκολπωματίτιδα, απόστημα)</option>
+                        <option value="GI-HEP Ηπατίτδα">GI-HEP Ηπατίτδα</option>
+                        <option value="GI-IAB Ενδοκοιλιακή λοίμωξη (χοληδόχος, χοληφόρα, ήπαρ, πάγκρεας, περιτόναιο, υποδιαφραγματικά)">GI-IAB Ενδοκοιλιακή λοίμωξη (χοληδόχος, χοληφόρα, ήπαρ, πάγκρεας, περιτόναιο, υποδιαφραγματικά)</option>
+                        <option value="REPR-EMET Ενδομητρίτιδα">REPR-EMET Ενδομητρίτιδα</option>
+                        <option value="REPR-EPIS Λοίμωξη περινεοτομής">REPR-EPIS Λοίμωξη περινεοτομής</option>
+                        <option value="REPR-VCUF Κολπικού κολοβώματος (μετά υστερεκτομή)">REPR-VCUF Κολπικού κολοβώματος (μετά υστερεκτομή)</option>
+                        <option value="REPR-OREP Λοιμώξεις αναπαραγωγικού (προστατίτιδα, επιδιδυμίτιδα, σαλπιγγίτιδα)">REPR-OREP Λοιμώξεις αναπαραγωγικού (προστατίτιδα, επιδιδυμίτιδα, σαλπιγγίτιδα)</option>
+                        <option value="SST-SKIN Λοίμωξη δέρματος">SST-SKIN Λοίμωξη δέρματος</option>
+                        <option value="SST-ST Μαλακών μορίων (νεκρ. Απονευρωσίτιδα, κυτταρίτιδα, λεμφαγγειίτιδα)">SST-ST Μαλακών μορίων (νεκρ. Απονευρωσίτιδα, κυτταρίτιδα, λεμφαγγειίτιδα)</option>
+                        <option value="SST-DECU Λοίμωξη έλκους κατάκλισης (επιφανειακή ή εν τω βάθει)">SST-DECU Λοίμωξη έλκους κατάκλισης (επιφανειακή ή εν τω βάθει)</option>
+                        <option value="SST-BURN Επί εγκαύματος">SST-BURN Επί εγκαύματος</option>
+                        <option value="SST-BRST Μαστίτιδα ή απόστημα">SST-BRST Μαστίτιδα ή απόστημα</option>
+                        <option value="SYS-DI Διάσπαρτη λοίμωξη (κυρίως ιογενής)">SYS-DI Διάσπαρτη λοίμωξη (κυρίως ιογενής)</option>
+                        <option value="SYS-CSEP Κλινική σήψη υπό θεραπεία χωρίς εμφανή εστία (Ορισμός τελευταίας λύσης)">SYS-CSEP Κλινική σήψη υπό θεραπεία χωρίς εμφανή εστία (Ορισμός τελευταίας λύσης)</option>
+                        <option value="NEO-CSEP Κλινική σήψη σε νεογνά">NEO-CSEP Κλινική σήψη σε νεογνά</option>
+                        <option value="NEO-LCBI Εργαστηριακά επιβεβαιωμένη βακτηριαιμία, non-CNS σε νεογνά">NEO-LCBI Εργαστηριακά επιβεβαιωμένη βακτηριαιμία, non-CNS σε νεογνά</option>
+                        <option value="NEO-CNSB Εργαστηριακά επιβεβαιωμένη βακτηριαιμία, CNS σε νεογνά">NEO-CNSB Εργαστηριακά επιβεβαιωμένη βακτηριαιμία, CNS σε νεογνά</option>
+                <option value="NEO-NEC">NEO-NEC Νεκρωτική εντεροκολίτιδα σε νεογνά</option>
+            </select>
+        </div>
+        <div class="form-row">
+            <label>Start Date:</label>
+            <input type="date" id="editInfStart" value="${infection.start}">
+        </div>
+        <div class="form-row">
+            <label>End Date:</label>
+            <input type="date" id="editInfEnd" value="${infection.end || ''}">
+        </div>
+        <div class="form-row">
+            <label>Evidence:</label>
+            <input type="text" id="editInfEvidence" value="${infection.evidence || ''}">
+        </div>
+        <div class="form-actions">
+            <button onclick="saveInfectionEdit(${index})" class="btn-success">Save</button>
+            <button onclick="hideInfectionForm()" class="btn-default">Cancel</button>
+        </div>
+    `;
+    
+    // Insert the form inline, after the specific infection entry
+    const infectionsDisplay = document.getElementById('infectionsDisplay');
+    const infectionEntry = infectionsDisplay.children[index];
+    infectionEntry.insertAdjacentElement('afterend', formContainer);
+    
+    // Set the selected infection type
+    document.getElementById('editInfType').value = infection.type;
+}
+
+function saveInfectionEdit(index) {
+    const patient = patients[bedIndex][currentPatientIndex[bedIndex]];
+    const infection = patient.infections[index];
+    
+    infection.type = document.getElementById('editInfType').value;
+    infection.start = document.getElementById('editInfStart').value;
+    infection.end = document.getElementById('editInfEnd').value || '';
+    infection.evidence = document.getElementById('editInfEvidence').value;
+    
+    saveAllData();
+    populateAntibioticsTable(); // Refresh the display
+    hideInfectionForm();
+}
+
+function cancelInfectionEdit(index) {
+    populateAntibioticsTable(); // Just refresh to show original data
+}
+
+function deleteInfection(index) {
+    if (confirm('Are you sure you want to delete this infection episode and its associated antibiotics?')) {
+        patients[bedIndex][currentPatientIndex[bedIndex]].infections.splice(index, 1);
+        saveAllData();
+        populateAntibioticsTable();
+    }
+}
+function formatInfectionDateRange(startDate, endDate) {
+    if (!startDate) return '';
+    
+    // Helper to convert YYYY-MM-DD to DD/MM
+    const formatToDDMM = (dateStr) => {
+        if (!dateStr) return '';
+        const [year, month, day] = dateStr.split('-');
+        return `${day}/${month}`;
+    };
+    
+    const startFormatted = formatToDDMM(startDate);
+    const endFormatted = endDate ? formatToDDMM(endDate) : 'ONGOING';
+    
+    return `[${startFormatted}-${endFormatted}]`;
+}
+    // Save all data to localStorage
+    function saveAllData() {
+        localStorage.setItem('icuPatients', JSON.stringify(patients));
+        localStorage.setItem('currentPatientIndices', JSON.stringify(currentPatientIndex));
+        
+        const saveBtn = document.querySelector('.data-management .btn-success');
+        saveBtn.classList.add('save-highlight');
+        setTimeout(() => {
+            saveBtn.classList.remove('save-highlight');
+        }, 1500);
+    }
+
+    // Highlight form fields
+    function highlightFields(fieldIds) {
+        fieldIds.forEach(id => {
+            const field = document.getElementById(id);
+            if (field) {
+                field.classList.remove('field-highlight');
+                setTimeout(() => {
+                    field.classList.add('field-highlight');
+                    setTimeout(() => {
+                        field.classList.remove('field-highlight');
+                    }, 1500);
+                }, 10);
+            }
+        });
+    }
+
+    // Calculation Functions
+    function calculateBMI(height, weight) {
+        if (!height || !weight || height <= 0 || weight <= 0) return '';
+        const heightMeters = height / 100;
+        return Math.round((weight / (heightMeters * heightMeters)) * 10) / 10;
+    }
+
+    function calculateIBW(gender, height) {
+        if (!gender || !height || height <= 0) return '';
+        const baseWeight = gender === 'Male' ? 50 : 45.5;
+        const heightInches = (height - 152.4) / 2.54;
+        return Math.round(baseWeight + (2.3 * heightInches));
+    }
+
+    function calculateABW(ibw, weight) {
+        if (!ibw || !weight || ibw <= 0 || weight <= 0) return '';
+        return Math.round(ibw + 0.4 * (weight - ibw));
+    }
+
+    function calculateWeightUsed(bmi, weight, ibw, abw) {
+        if (!bmi || !weight || !ibw || !abw) return '';
+        if (bmi < 18.5) return Math.round(weight);
+        if (bmi >= 18.5 && bmi <= 24.9) return Math.round(ibw);
+        return Math.round(abw);
+    }
+
+    function calculateCrCl(gender, age, weightUsed, creatinine) {
+        if (!gender || !age || !weightUsed || !creatinine || creatinine <= 0) return '';
+        const baseCrCl = ((140 - age) * weightUsed) / (72 * creatinine);
+        return Math.round(gender === 'Male' ? baseCrCl : baseCrCl * 0.85);
+    }
+
+    function calculateNoraDose(noradrenaline, weightUsed, hasPVC) {
+        if (!noradrenaline || !weightUsed || weightUsed <= 0) return '';
+        const factor = hasPVC ? 0.532 : 1.33;
+        return Math.round((factor * noradrenaline / weightUsed) * 100) / 100;
+    }
+
+    function calculatePFRatio(pO2, fiO2) {
+        if (!pO2 || !fiO2 || fiO2 <= 0) return '';
+        return Math.round((pO2 / (fiO2 / 100)) * 10) / 10;
+    }
+function calculatePatientDDDs(patient) {
+    let totalDDDs = 0;
+    let totalDays = 0;
+    let totalASI = 0;
+    let awareDDDs = { Access: 0, Watch: 0, Reserve: 0, Unknown: 0 };
+
+    // Helper function to parse dates in DD-MM-YYYY or YYYY-MM-DD format
+    function parseDate(dateStr) {
+        if (!dateStr) return new Date();
+        
+        // Try DD-MM-YYYY format first
+        const parts = dateStr.split(/[-/]/);
+        if (parts.length === 3) {
+            if (parts[0].length === 4) { // YYYY-MM-DD
+                return new Date(dateStr);
+            } else { // DD-MM-YYYY
+                return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+            }
+        }
+        return new Date(dateStr); // fallback
+    }
+
+    patient.infections.forEach(inf => {
+        inf.antibiotics.forEach(ab => {
+            const ddd = antibioticDDDs[ab.name];
+            const asi = antibioticASI[ab.name];
+            const aware = awareClassification[ab.name] || 'Unknown';
+
+            if (!ddd || !ab.dose || !ab.timesPerDay || !ab.start) {
+                console.warn(`Missing required data for antibiotic:`, ab);
+                return;
+            }
+
+            const start = parseDate(ab.start);
+            const end = ab.end ? parseDate(ab.end) : new Date();
+
+            // Ensure valid dates
+            if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+                console.warn(`Invalid dates for antibiotic:`, ab);
+                return;
+            }
+
+            // Calculate days (adding 1 to include both start and end day)
+            const days = Math.max(1, Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1);
+            
+            // Calculate total given and DDDs
+            const totalGiven = parseFloat(ab.dose) * parseInt(ab.timesPerDay) * days;
+            const abDDD = totalGiven / ddd;
+
+            totalDDDs += abDDD;
+            totalDays += days;
+            
+            if (asi) {
+                totalASI += parseFloat(asi) * days;
+            }
+
+            if (awareDDDs[aware] !== undefined) {
+                awareDDDs[aware] += abDDD;
+            } else {
+                awareDDDs.Unknown += abDDD;
+            }
+        });
+    });
+
+    const dddsPer1000pd = totalDays > 0 ? (totalDDDs / totalDays) * 1000 : 0;
+    const asiPerDot = totalDays > 0 ? totalASI / totalDays : 0;
+    const asiPer1000pd = totalDays > 0 ? (totalASI / totalDays) * 1000 : 0;
+
+    return {
+        totalDDDs,
+        totalDays,
+        dddsPer1000pd,
+        totalASI,
+        asiPerDot,
+        asiPer1000pd,
+        awareDDDs
+    };
+}
+
+        // Update getDailyDDDEntries to use infections
+        function getDailyDDDEntries(patient) {
+            const dailyData = {};
+
+            function parseDMY(dateStr) {
+                const [day, month, year] = dateStr.split(/[-/]/);
+                return new Date(`${year}-${month}-${day}`);
+            }
+
+            patient.infections.forEach(inf => {
+                inf.antibiotics.forEach(ab => {
+                    const ddd = antibioticDDDs[ab.name];
+                    if (!ddd || !ab.dose || !ab.timesPerDay || !ab.start) return;
+
+                    const start = parseDMY(ab.start);
+                    const end = ab.end ? parseDMY(ab.end) : new Date();
+
+                    const days = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
+                    if (days <= 0) return;
+
+                    const dailyDDD = (ab.dose * ab.timesPerDay) / ddd;
+
+                    for (let i = 0; i < days; i++) {
+                        const date = new Date(start);
+                        date.setDate(start.getDate() + i);
+                        const key = date.toISOString().split('T')[0]; // YYYY-MM-DD
+
+                        if (!dailyData[key]) dailyData[key] = [];
+                        dailyData[key].push({
+                            patientId: patient.id,
+                            patientName: patient.name,
+                            infection: inf.type,
+                            antibiotic: ab.name,
+                            dddValue: ddd,
+                            dose: ab.dose,
+                            timesPerDay: ab.timesPerDay,
+                            dailyDDD: dailyDDD.toFixed(3)
+                        });
+                    }
+                });
+            });
+
+            return dailyData;
+        }
+
+    // Export data to Excel with multiple sheets
+    function exportToExcel() {
+    try {
+        // Create a new workbook
+        const wb = XLSX.utils.book_new();
+        
+        // Helper function to safely create worksheets
+        const createWorksheet = (data, sheetName) => {
+            try {
+                if (!data || data.length === 0) {
+                    console.warn(`No data for sheet: ${sheetName}`);
+                    return null;
+                }
+                return XLSX.utils.json_to_sheet(data);
+            } catch (error) {
+                console.error(`Error creating sheet ${sheetName}:`, error);
+                return null;
+            }
+        };
+
+        // 1. PATIENTS SHEET
+        const patientData = patients.map((bedPatients, bedIndex) => {
+            return bedPatients.map(patient => ({
+                "Bed": bedIndex + 1,
+                "Patient ID": patient.id || '',
+                "Name": patient.name || '',
+                "DOB": patient.dob || '',
+                "Gender": patient.gender || '',
+                "Height (cm)": patient.height || '',
+                "Weight (kg)": patient.weight || '',
+                "BMI": patient.bmi || '',
+                "Admission Date": patient.admissionDate || '',
+                "Discharge Date": patient.dischargeDate || '',
+                "MDR Status": patient.mdrStatus || '',
+                "Transfer History": patient.transferHistory ? 
+                    patient.transferHistory.map(t => `Bed ${t.fromBed}→${t.toBed} on ${t.date}`).join('; ') : ''
+            }));
+        }).flat();
+
+        const patientWS = createWorksheet(patientData, "Patients");
+        if (patientWS) XLSX.utils.book_append_sheet(wb, patientWS, "Patients");
+
+        // 2. CULTURES SHEET
+        const cultureData = [];
+        patients.forEach((bedPatients, bedIndex) => {
+            bedPatients.forEach(patient => {
+                patient.cultures.forEach(culture => {
+                    culture.organisms.forEach(organism => {
+                        if (organism.sensitivities.length > 0) {
+                            organism.sensitivities.forEach(sensitivity => {
+                                cultureData.push({
+                                    "Bed": bedIndex + 1,
+                                    "Patient ID": patient.id,
+                                    "Patient Name": patient.name,
+                                    "Specimen": culture.specimen,
+                                    "Date": culture.date,
+                                    "Timing": culture.timing,
+                                    "Organism": organism.name,
+                                    "Antibiotic": sensitivity.antibiotic,
+                                    "Result": sensitivity.result,
+                                    "Resistances": organism.resistances ? organism.resistances.join(', ') : ''
+                                });
+                            });
+                        } else {
+                            cultureData.push({
+                                "Bed": bedIndex + 1,
+                                "Patient ID": patient.id,
+                                "Patient Name": patient.name,
+                                "Specimen": culture.specimen,
+                                "Date": culture.date,
+                                "Timing": culture.timing,
+                                "Organism": organism.name,
+                                "Antibiotic": '',
+                                "Result": '',
+                                "Resistances": organism.resistances ? organism.resistances.join(', ') : ''
+                            });
+                        }
+                    });
+                });
+            });
+        });
+
+        cultureData.sort((a, b) => new Date(a.Date) - new Date(b.Date));
+        const cultureWS = createWorksheet(cultureData, "Cultures");
+        if (cultureWS) XLSX.utils.book_append_sheet(wb, cultureWS, "Cultures");
+
+        // 3. ANTIBIOTICS SHEET
+        const antibioticData = [];
+        patients.forEach((bedPatients, bedIndex) => {
+            bedPatients.forEach(patient => {
+                patient.infections.forEach((inf, infIndex) => {
+                    inf.antibiotics.forEach(ab => {
+                        const asi = antibioticASI[ab.name] || '';
+                        antibioticData.push({
+                            "Bed": bedIndex + 1,
+                            "Patient ID": patient.id,
+                            "Patient Name": patient.name,
+                            "Infection ID": inf.id,
+                            "Infection Type": inf.type,
+                            "Infection Start": inf.start,
+                            "Infection End": inf.end || '',
+                            "Infection Evidence": inf.evidence,
+                            "Antibiotic Name": ab.name || '',
+                            "Type": ab.type || '',
+                            "Dose": ab.dose || '',
+                            "Units": ab.units || '',
+                            "Times/Day": ab.timesPerDay || '',
+                            "Route": ab.route || '',
+                            "Antibiotic Start": ab.start || '',
+                            "Antibiotic End": ab.end || '',
+                            "ASI": asi
+                        });
+                    });
+                });
+            });
+        });
+
+        const antibioticWS = createWorksheet(antibioticData, "Antibiotics");
+        if (antibioticWS) XLSX.utils.book_append_sheet(wb, antibioticWS, "Antibiotics");
+
+        // 4. FOREIGN BODIES SHEET
+        const foreignBodyData = [];
+        patients.forEach((bedPatients, bedIndex) => {
+            bedPatients.forEach(patient => {
+                patient.foreignBodies.forEach(fb => {
+                    foreignBodyData.push({
+                        "Bed": bedIndex + 1,
+                        "Patient ID": patient.id,
+                        "Patient Name": patient.name,
+                        "Device Type": fb.deviceType || '',
+                        "Insertion Date": fb.insertionDate || '',
+                        "Removal Date": fb.removalDate || ''
+                    });
+                });
+            });
+        });
+
+        const foreignBodyWS = createWorksheet(foreignBodyData, "Foreign Bodies");
+        if (foreignBodyWS) XLSX.utils.book_append_sheet(wb, foreignBodyWS, "Foreign Bodies");
+
+        // 5. CLINICAL DATA SHEET
+        const clinicalData = [];
+        patients.forEach((bedPatients, bedIndex) => {
+            bedPatients.forEach(patient => {
+                patient.clinicalData.forEach(cd => {
+                    clinicalData.push({
+                        "Bed": bedIndex + 1,
+                        "Patient ID": patient.id,
+                        "Patient Name": patient.name,
+                        "Date": cd.date || '',
+                        "Temp (°C)": cd.temperature || '',
+                        "Noradrenaline": cd.noradrenaline !== undefined ? cd.noradrenaline : 0,
+                        "WBC": cd.wbc || '',
+                        "CRP": cd.crp || '',
+                        "PCT": cd.pct || '',
+                        "Hgb": cd.hgb || '',
+                        "Urea": cd.urea || '',
+                        "Creatinine": cd.creatinine || '',
+                        "PEEP": cd.peep || '',
+                        "pO2": cd.pO2 || '',
+                        "FiO2": cd.fiO2 || '',
+                        "p/f Ratio": cd.pfRatio || '',
+                        "Weight Used": cd.weightUsed || '',
+                        "CrCl": cd.crCl || '',
+                        "MeasCrCl": cd.meascrcl || '',
+                        "NoraDose": cd.noraDose !== undefined ? cd.noraDose : 0
+                    });
+                });
+            });
+        });
+
+        const clinicalWS = createWorksheet(clinicalData, "Clinical Data");
+        if (clinicalWS) XLSX.utils.book_append_sheet(wb, clinicalWS, "Clinical Data");
+
+        // 6. SUMMARY SHEET
+        const summaryData = [];
+let overallDDDs = 0;
+let overallDays = 0;
+let overallASI = 0;
+let overallAware = {
+    Access: 0,
+    Watch: 0,
+    Reserve: 0,
+    Unknown: 0
+};
+
+// Add debug logging
+console.log('Calculating summary data for patients:', patients);
+
+patients.forEach((bedPatients, bedIndex) => {
+    bedPatients.forEach(patient => {
+        console.log(`Processing patient ${patient.id} in bed ${bedIndex + 1}`);
+        
+        const result = calculatePatientDDDs(patient);
+        console.log('Calculation results:', result);
+
+        overallDDDs += result.totalDDDs;
+        overallDays += result.totalDays;
+        overallASI += result.totalASI;
+        overallAware.Access += result.awareDDDs.Access || 0;
+        overallAware.Watch += result.awareDDDs.Watch || 0;
+        overallAware.Reserve += result.awareDDDs.Reserve || 0;
+        overallAware.Unknown += result.awareDDDs.Unknown || 0;
+
+        summaryData.push({
+            "Bed": bedIndex + 1,
+            "Patient ID": patient.id,
+            "Patient Name": patient.name,
+            "DDDs": result.totalDDDs.toFixed(2),
+            "Patient-Days": result.totalDays,
+            "DDDs/1000 Patient Days": result.dddsPer1000pd.toFixed(1),
+            "Total ASI": result.totalASI.toFixed(1),
+            "ASI/DOT": result.asiPerDot.toFixed(2),
+            "ASI/1000 PD": result.asiPer1000pd.toFixed(1),
+            "ASI per Patient": result.totalASI.toFixed(1),
+            "Access DDDs": (result.awareDDDs.Access || 0).toFixed(2),
+            "Watch DDDs": (result.awareDDDs.Watch || 0).toFixed(2),
+            "Reserve DDDs": (result.awareDDDs.Reserve || 0).toFixed(2),
+            "Unknown DDDs": (result.awareDDDs.Unknown || 0).toFixed(2),
+            "% Access": result.totalDDDs > 0 ? ((result.awareDDDs.Access || 0) / result.totalDDDs * 100).toFixed(1) + "%" : "0%",
+            "% Watch": result.totalDDDs > 0 ? ((result.awareDDDs.Watch || 0) / result.totalDDDs * 100).toFixed(1) + "%" : "0%",
+            "% Reserve": result.totalDDDs > 0 ? ((result.awareDDDs.Reserve || 0) / result.totalDDDs * 100).toFixed(1) + "%" : "0%"
+        });
+    });
+});
+
+// Add totals row with additional validation
+const totalPatients = patients.flat().length;
+summaryData.push({
+    "Bed": "ALL",
+    "Patient ID": "",
+    "Patient Name": "",
+    "DDDs": overallDDDs > 0 ? overallDDDs.toFixed(2) : "0",
+    "Patient-Days": overallDays > 0 ? overallDays : "0",
+    "DDDs/1000 Patient Days": overallDays > 0 ? (overallDDDs / overallDays * 1000).toFixed(1) : "0",
+    "Total ASI": overallASI > 0 ? overallASI.toFixed(1) : "0",
+    "ASI/DOT": overallDays > 0 ? (overallASI / overallDays).toFixed(2) : "0",
+    "ASI/1000 PD": overallDays > 0 ? (overallASI / overallDays * 1000).toFixed(1) : "0",
+    "ASI per Patient": totalPatients > 0 ? (overallASI / totalPatients).toFixed(1) : "0",
+    "Access DDDs": overallAware.Access.toFixed(2),
+    "Watch DDDs": overallAware.Watch.toFixed(2),
+    "Reserve DDDs": overallAware.Reserve.toFixed(2),
+    "Unknown DDDs": overallAware.Unknown.toFixed(2),
+    "% Access": overallDDDs > 0 ? (overallAware.Access / overallDDDs * 100).toFixed(1) + "%" : "0%",
+    "% Watch": overallDDDs > 0 ? (overallAware.Watch / overallDDDs * 100).toFixed(1) + "%" : "0%",
+    "% Reserve": overallDDDs > 0 ? (overallAware.Reserve / overallDDDs * 100).toFixed(1) + "%" : "0%"
+});
+
+console.log('Final summary data:', summaryData);
+const summaryWS = XLSX.utils.json_to_sheet(summaryData);
+XLSX.utils.book_append_sheet(wb, summaryWS, "Summary");
+
+        // 7. DDD DAILY SHEET
+        const allDailyData = {};
+        patients.flat().forEach(patient => {
+            const entries = getDailyDDDEntries(patient);
+            for (const date in entries) {
+                if (!allDailyData[date]) allDailyData[date] = [];
+                allDailyData[date].push(...entries[date]);
+            }
+        });
+
+        // Flatten for Excel export
+        const dailyDDDExportData = [];
+        for (const date in allDailyData) {
+            allDailyData[date].forEach(entry => {
+                dailyDDDExportData.push({
+                    Date: date,
+                    "Patient ID": entry.patientId,
+                    "Patient Name": entry.patientName,
+                    Antibiotic: entry.antibiotic,
+                    "DDD Value": entry.dddValue,
+                    "Dose Given": entry.dose,
+                    "Times/Day": entry.timesPerDay,
+                    "Daily DDDs": entry.dailyDDD
+                });
+            });
+        }
+
+        dailyDDDExportData.sort((a, b) => new Date(a.Date) - new Date(b.Date));
+        const dailyDDDWS = createWorksheet(dailyDDDExportData, "DDD Daily");
+        if (dailyDDDWS) XLSX.utils.book_append_sheet(wb, dailyDDDWS, "DDD Daily");
+
+        // Export the workbook
+        const fileName = `icu_full_data_${new Date().toISOString().slice(0,10)}.xlsx`;
+        XLSX.writeFile(wb, fileName);
+        
+        console.log('Excel export completed successfully');
+    } catch (error) {
+        console.error('Error exporting to Excel:', error);
+        alert('Error exporting to Excel. Please check console for details.');
+    }
+}
+
+    // Import data from file
+    function importData() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json,.xlsx';
+        
+        input.onchange = e => {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = event => {
+                try {
+                    if (file.name.endsWith('.xlsx')) {
+                        alert('Excel import not implemented yet. Please use JSON for import.');
+                        return;
+                    }
+                    
+                    const importedData = JSON.parse(event.target.result);
+                    
+                    if (confirm('This will overwrite current data. Continue?')) {
+                        patients = importedData.patients || Array.from({ length: 19 }, () => []);
+                        currentPatientIndex = importedData.currentIndices || Array(19).fill(0);
+                        // Ensure each patient has required arrays and new fields
+                        patients.forEach(bed => {
+                            bed.forEach(patient => {
+                                if (!patient.cultures) patient.cultures = [];
+                                if (!patient.antibiotics) patient.antibiotics = [];
+                                if (!patient.foreignBodies) patient.foreignBodies = [];
+                                if (!patient.clinicalData) patient.clinicalData = [];
+                                if (!patient.gender) patient.gender = '';
+                                if (!patient.height) patient.height = '';
+                                if (!patient.weight) patient.weight = '';
+                                if (!patient.bmi) patient.bmi = '';
+                            });
+                        });
+                        
+                        saveAllData();
+                        renderBoard();
+                    }
+                } catch (error) {
+                    alert('Error importing file: ' + error.message);
+                }
+            };
+            
+            reader.readAsText(file);
+        };
+        
+        input.click();
+    }
+
+    // Clear all data
+    function clearAllData() {
+        if (confirm('WARNING: This will permanently delete all data. Continue?')) {
+            patients = Array.from({ length: 19 }, () => []);
+            currentPatientIndex = Array(19).fill(0);
+            
+            localStorage.clear();
+            renderBoard();
+        }
+    }
+
+    // Render the bed/patient table
+    function renderBoard() {
+        const table = document.querySelector('#bedTable tbody');
+        table.innerHTML = '';
+        
+        for (let i = 0; i < 19; i++) {
+            const idx = patients[i].length > 0 ? currentPatientIndex[i] : null;
+            const p = idx !== null ? patients[i][idx] : null;
+            const age = p && p.dob ? calculateAge(p.dob) : '';
+            const counter = (idx !== null && patients[i].length > 0) ? `${idx + 1} of ${patients[i].length}` : '';
+            const hasInfection = p && (p.cultures.length > 0 || p.antibiotics.length > 0 || p.foreignBodies.length > 0 || p.clinicalData.length > 0);
+            const isAdmitted = p && !p.dischargeDate;
+
+            const row = document.createElement('tr');
+            if (hasInfection) row.classList.add('infected');
+            
+            row.innerHTML = `
+                <td class="col-bed">${i + 1}</td>
+                <td class="col-id">${p ? p.id : ''}</td>
+                <td class="col-name">${p ? p.name : ''}</td>
+                <td class="col-date">${p ? p.dob : ''}</td>
+                <td class="col-date">${p ? p.admissionDate : ''}</td>
+                <td class="col-date">${p ? p.dischargeDate || '' : ''}</td>
+                <td class="col-age">${age}</td>
+                <td class="col-actions action-cell">
+                    <button data-bed="${i}" class="admitBtn btn-primary" ${isAdmitted ? 'disabled' : ''}>Admit</button>
+                    <button data-bed="${i}" class="transferBtn btn-primary" ${!isAdmitted ? 'disabled' : ''}>Transfer</button>
+                    <button data-bed="${i}" class="dischargeBtn btn-danger">Discharge</button>
+                    <button data-bed="${i}" class="prevBtn btn-default"><</button>
+                    <button data-bed="${i}" class="nextBtn btn-default">></button>
+                    <button data-bed="${i}" class="editBtn btn-primary">Edit</button>
+                    <button data-bed="${i}" class="manageBtn btn-primary">Manage</button>
+                    <button data-bed="${i}" class="deleteBtn btn-danger">X</button>
+                </td>
+                <td class="col-history counter">${counter}</td>`;
+            table.appendChild(row);
+        }
+    }
+
+
+    function calculateAge(dob) {
+        if (!dob) return '';
+        const birth = new Date(dob);
+        const today = new Date();
+        let age = today.getFullYear() - birth.getFullYear();
+        const m = today.getMonth() - birth.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+        return age;
+    }
+
+    // Patient Management Event Handlers
+    // MODIFIED event listener to handle transfer button
+    document.addEventListener('click', e => {
+        const bed = +e.target.dataset.bed;
+        if (e.target.matches('.admitBtn')) {
+            admitPatient(bed);
+        }
+        if (e.target.matches('.transferBtn')) {
+            transferPatient(bed);
+        }
+        if (e.target.matches('.dischargeBtn')) {
+            const idx = currentPatientIndex[bed];
+            const p = patients[bed][idx];
+            if (p && !p.dischargeDate) {
+                const confirmDischarge = confirm('Are you sure you want to discharge this patient?');
+                if (confirmDischarge) {
+                    p.dischargeDate = new Date().toISOString().split('T')[0];
+                    saveAllData();
+                    renderBoard();
+                }
+            } else {
+                alert('This patient is already discharged.');
+            }
+        }
+        if (e.target.matches('.prevBtn')) {
+            if (currentPatientIndex[bed] > 0) {
+                currentPatientIndex[bed]--;
+                saveAllData();
+                renderBoard();
+            }
+        }
+        if (e.target.matches('.nextBtn')) {
+            if (currentPatientIndex[bed] < patients[bed].length - 1) {
+                currentPatientIndex[bed]++;
+                saveAllData();
+                renderBoard();
+            }
+        }
+        if (e.target.matches('.editBtn')) editPatient(bed);
+        if (e.target.matches('.manageBtn')) managePatient(bed);
+        if (e.target.matches('.deleteBtn')) deletePatient(bed);
+        if (e.target.matches('#saveCultureBtn')) {
+        saveCulture();
+    }
+});
+
+    function admitPatient(bed) {
+        bedIndex = bed;
+        editing = false;
+        currentPatientEditIndex = patients[bed].length;
+        document.getElementById('formMode').innerText = 'Admit Patient';
+        document.getElementById('bedNumberDisplay').innerText = bed + 1;
+        document.getElementById('patientID').value = '';
+        document.getElementById('fullName').value = '';
+        document.getElementById('dob').value = '';
+        document.getElementById('gender').value = '';
+        document.getElementById('height').value = '';
+        document.getElementById('weight').value = '';
+        document.getElementById('bmi').value = '';
+        document.getElementById('admissionDate').value = '';
+        document.getElementById('dischargeDate').value = '';
+        document.getElementById('mdrStatus').value = '';
+        document.getElementById('bedTable').classList.add('hidden');
+        document.getElementById('patientForm').classList.remove('hidden');
+        updateNavigationButtons();
+    }
+
+    function editPatient(bed) {
+        bedIndex = bed;
+        editing = true;
+        currentPatientEditIndex = currentPatientIndex[bed];
+        const p = patients[bed][currentPatientIndex[bed]];
+        document.getElementById('formMode').innerText = 'Edit Patient';
+        document.getElementById('bedNumberDisplay').innerText = bed + 1;
+        document.getElementById('patientID').value = p.id || '';
+        document.getElementById('fullName').value = p.name || '';
+        document.getElementById('dob').value = p.dob || '';
+        document.getElementById('gender').value = p.gender || '';
+        document.getElementById('height').value = p.height || '';
+        document.getElementById('weight').value = p.weight || '';
+        document.getElementById('bmi').value = p.bmi || '';
+        document.getElementById('admissionDate').value = p.admissionDate || '';
+        document.getElementById('dischargeDate').value = p.dischargeDate || '';
+        document.getElementById('mdrStatus').value = p.mdrStatus || '';
+        document.getElementById('bedTable').classList.add('hidden');
+        document.getElementById('patientForm').classList.remove('hidden');
+        updateNavigationButtons();
+    }
+
+    function deletePatient(bed) {
+        const idx = currentPatientIndex[bed];
+        const p = patients[bed][idx];
+        if (p && confirm(`Are you sure you want to permanently delete patient ${p.name || 'ID: ' + p.id}? This cannot be undone.`)) {
+            patients[bed].splice(idx, 1);
+            if (patients[bed].length === 0) {
+                currentPatientIndex[bed] = 0;
+            } else if (idx >= patients[bed].length) {
+                currentPatientIndex[bed] = patients[bed].length - 1;
+            }
+            saveAllData();
+            renderBoard();
+        }
+    }
+
+    function managePatient(bed) {
+    bedIndex = bed;
+    const patient = patients[bed][currentPatientIndex[bed]];
+    
+    if (!patient) {
+        alert('No patient to manage.');
+        return;
+    }
+    
+    // Find all instances of this patient across beds
+    const allInstances = findPatientInOtherBeds(patient.id);
+    
+    document.getElementById('manageBed').innerText = bed + 1;
+    document.getElementById('manageName').innerText = patient.name || 'ID: ' + patient.id;
+    
+    // Update transfer history display
+    const historyContainer = document.getElementById('transferHistoryContainer');
+    if (allInstances.length > 1 || (patient.transferHistory && patient.transferHistory.length > 0)) {
+        historyContainer.classList.remove('hidden');
+        
+        let historyHTML = '<h3>Patient Locations</h3>';
+        allInstances.forEach(loc => {
+            historyHTML += `
+                <div class="transfer-entry">
+                    Bed ${loc.bed + 1}: ${loc.admission} to ${loc.discharge}
+                </div>`;
+        });
+        
+        if (patient.transferHistory) {
+            historyHTML += '<h3 style="margin-top:15px;">Transfer History</h3>';
+            patient.transferHistory.forEach(t => {
+                historyHTML += `
+                    <div class="transfer-entry">
+                        ${t.date}: Bed ${t.fromBed} → Bed ${t.toBed}
+                    </div>`;
+            });
+        }
+        
+        historyContainer.innerHTML = historyHTML;
+    } else {
+        historyContainer.classList.add('hidden');
+    }
+    
+    document.getElementById('bedTable').classList.add('hidden');
+    document.getElementById('manageSection').classList.remove('hidden');
+    populateTables();
+}
+function findPatientInOtherBeds(patientId) {
+    const locations = [];
+    patients.forEach((bedPatients, bedIndex) => {
+        bedPatients.forEach((patient, patientIndex) => {
+            if (patient.id === patientId) {
+                locations.push({
+                    bed: bedIndex,
+                    index: patientIndex,
+                    admission: patient.admissionDate,
+                    discharge: patient.dischargeDate || 'Current'
+                });
+            }
+        });
+    });
+    return locations;
+}
+    // NEW FUNCTION: Handle patient transfers
+    function transferPatient(currentBed) {
+    const patientIndex = currentPatientIndex[currentBed];
+    const patient = patients[currentBed][patientIndex];
+    
+    if (!patient) {
+        alert('No patient in this bed to transfer');
+        return;
+    }
+    
+    // Create transfer dialog
+    const transferDialog = `
+        <div style="padding:20px;max-width:400px;">
+            <h3>Transfer Patient</h3>
+            <p><strong>Patient:</strong> ${patient.name || 'ID: '+patient.id}</p>
+            <p><strong>Current Bed:</strong> ${currentBed+1}</p>
+            
+            <div style="margin:15px 0;">
+                <label for="transferTargetBed">New Bed:</label>
+                <select id="transferTargetBed" style="width:100%;padding:8px;">
+                    ${Array.from({length:19}, (_,i) => 
+                        `<option value="${i}" ${i===currentBed?'disabled':''}>
+                            Bed ${i+1} ${i!==currentBed&&patients[i].some(p=>!p.dischargeDate)?'(Occupied)':''}
+                        </option>`
+                    ).join('')}
+                </select>
+            </div>
+            
+            <div style="margin:15px 0;">
+                <label for="transferDate">Transfer Date:</label>
+                <input type="date" id="transferDate" value="${new Date().toISOString().split('T')[0]}" style="width:100%;padding:8px;">
+            </div>
+            
+            <div style="display:flex;justify-content:space-between;margin-top:20px;">
+                <button id="confirmTransfer" style="padding:8px 15px;background:#3498db;color:white;border:none;border-radius:4px;">Transfer</button>
+                <button id="cancelTransfer" style="padding:8px 15px;background:#e74c3c;color:white;border:none;border-radius:4px;">Cancel</button>
+            </div>
+        </div>`;
+    
+    const dialog = document.createElement('div');
+    dialog.style.position = 'fixed';
+    dialog.style.top = '50%';
+    dialog.style.left = '50%';
+    dialog.style.transform = 'translate(-50%, -50%)';
+    dialog.style.backgroundColor = 'white';
+    dialog.style.borderRadius = '8px';
+    dialog.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
+    dialog.style.zIndex = '1000';
+    dialog.innerHTML = transferDialog;
+    document.body.appendChild(dialog);
+    
+    document.getElementById('confirmTransfer').addEventListener('click', () => {
+        const targetBed = parseInt(document.getElementById('transferTargetBed').value);
+        const transferDate = document.getElementById('transferDate').value;
+        
+        if (targetBed === currentBed) {
+            alert('Cannot transfer to the same bed');
+            return;
+        }
+        
+        // Discharge from current bed (but keep in history)
+        patient.dischargeDate = transferDate;
+        
+        // Create new admission in target bed
+        const newPatient = JSON.parse(JSON.stringify(patient));
+        newPatient.dischargeDate = '';
+        newPatient.admissionDate = transferDate;
+        
+        // Add to transfer history
+        if (!newPatient.transferHistory) newPatient.transferHistory = [];
+        newPatient.transferHistory.push({
+            fromBed: currentBed + 1,
+            toBed: targetBed + 1,
+            date: transferDate
+        });
+        
+        // Add to new bed
+        patients[targetBed].push(newPatient);
+        currentPatientIndex[targetBed] = patients[targetBed].length - 1;
+        
+        saveAllData();
+        renderBoard();
+        document.body.removeChild(dialog);
+    });
+    
+    document.getElementById('cancelTransfer').addEventListener('click', () => {
+        document.body.removeChild(dialog);
+    });
+}
+
+    function returnToBoard() {
+        document.getElementById('manageSection').classList.add('hidden');
+        document.getElementById('bedTable').classList.remove('hidden');
+        bedIndex = null;
+        resetCultureForm();
+        resetAntibioticForm();
+        resetForeignBodyForm();
+        resetClinicalDataForm();
+    }
+
+    function updateNavigationButtons() {
+        const prevBtn = document.getElementById('prevPatientBtn');
+        const nextBtn = document.getElementById('nextPatientBtn');
+        prevBtn.disabled = currentPatientEditIndex <= 0;
+        nextBtn.disabled = currentPatientEditIndex >= patients[bedIndex].length - 1;
+    }
+
+    document.getElementById('prevPatientBtn').addEventListener('click', () => {
+        if (currentPatientEditIndex > 0) {
+            currentPatientEditIndex--;
+            editing = true;
+            const p = patients[bedIndex][currentPatientEditIndex];
+            document.getElementById('formMode').innerText = 'Edit Patient';
+            document.getElementById('patientID').value = p.id || '';
+            document.getElementById('fullName').value = p.name || '';
+            document.getElementById('dob').value = p.dob || '';
+            document.getElementById('gender').value = p.gender || '';
+            document.getElementById('height').value = p.height || '';
+            document.getElementById('weight').value = p.weight || '';
+            document.getElementById('bmi').value = p.bmi || '';
+            document.getElementById('admissionDate').value = p.admissionDate || '';
+            document.getElementById('dischargeDate').value = p.dischargeDate || '';
+            document.getElementById('mdrStatus').value = p.mdrStatus || '';
+            updateNavigationButtons();
+        }
+    });
+
+    document.getElementById('nextPatientBtn').addEventListener('click', () => {
+        if (currentPatientEditIndex < patients[bedIndex].length - 1) {
+            currentPatientEditIndex++;
+            editing = true;
+            const p = patients[bedIndex][currentPatientEditIndex];
+            document.getElementById('formMode').innerText = 'Edit Patient';
+            document.getElementById('patientID').value = p.id || '';
+            document.getElementById('fullName').value = p.name || '';
+            document.getElementById('dob').value = p.dob || '';
+            document.getElementById('gender').value = p.gender || '';
+            document.getElementById('height').value = p.height || '';
+            document.getElementById('weight').value = p.weight || '';
+            document.getElementById('bmi').value = p.bmi || '';
+            document.getElementById('admissionDate').value = p.admissionDate || '';
+            document.getElementById('dischargeDate').value = p.dischargeDate || '';
+            document.getElementById('mdrStatus').value = p.mdrStatus || '';
+            updateNavigationButtons();
+        }
+    });
+
+    document.getElementById('saveBtn').addEventListener('click', () => {
+        const patient = {
+            id: document.getElementById('patientID').value,
+            name: document.getElementById('fullName').value,
+            dob: document.getElementById('dob').value,
+            gender: document.getElementById('gender').value,
+            height: parseFloat(document.getElementById('height').value) || '',
+            weight: parseFloat(document.getElementById('weight').value) || '',
+            bmi: parseFloat(document.getElementById('bmi').value) || '',
+            admissionDate: document.getElementById('admissionDate').value,
+            dischargeDate: document.getElementById('dischargeDate').value,
+            mdrStatus: document.getElementById('mdrStatus').value,
+            cultures: [],
+            antibiotics: [],
+            foreignBodies: [],
+            clinicalData: []
+        };
+
+        if (!patient.id || !patient.name || !patient.dob || !patient.admissionDate) {
+            alert('Please provide Patient ID, Name, DOB, and Admission Date.');
+            return;
+        }
+
+        if (!patient.gender) {
+            alert('Please select a gender.');
+            return;
+        }
+
+        if (patient.height && patient.weight) {
+            patient.bmi = calculateBMI(patient.height, patient.weight);
+            document.getElementById('bmi').value = patient.bmi;
+        } else {
+            patient.bmi = '';
+        }
+
+        if (editing) {
+            patient.cultures = patients[bedIndex][currentPatientEditIndex].cultures;
+            patient.antibiotics = patients[bedIndex][currentPatientEditIndex].antibiotics;
+            patient.foreignBodies = patients[bedIndex][currentPatientEditIndex].foreignBodies;
+            patient.clinicalData = patients[bedIndex][currentPatientEditIndex].clinicalData;
+            patients[bedIndex][currentPatientEditIndex] = patient;
+        } else {
+            patients[bedIndex].push(patient);
+            currentPatientIndex[bedIndex] = patients[bedIndex].length - 1;
+        }
+
+        saveAllData();
+        document.getElementById('patientForm').classList.add('hidden');
+        document.getElementById('bedTable').classList.remove('hidden');
+        renderBoard();
+        highlightFields(['patientID', 'fullName', 'dob', 'gender', 'height', 'weight', 'bmi', 'admissionDate']);
+    });
+
+    document.getElementById('cancelBtn').addEventListener('click', () => {
+        document.getElementById('patientForm').classList.add('hidden');
+        document.getElementById('bedTable').classList.remove('hidden');
+    });
+
+    document.getElementById('height').addEventListener('input', updateBMI);
+    document.getElementById('weight').addEventListener('input', updateBMI);
+
+    function updateBMI() {
+        const height = parseFloat(document.getElementById('height').value);
+        const weight = parseFloat(document.getElementById('weight').value);
+        const bmi = calculateBMI(height, weight);
+        document.getElementById('bmi').value = bmi || '';
+    }
+    function toggleManageFullscreen() {
+  document.getElementById("manageSection").classList.toggle("fullscreen");
+}
+
+
+    function showCultureSection() {
+    // Show the main sections
+    document.getElementById('cultureSection').classList.remove('hidden');
+    document.getElementById('cultureForm').classList.remove('hidden');
+    
+    // Reset all form fields and state variables
+    resetCultureForm();
+    
+    // Initialize with empty state
+    selectedCultureIndex = null;
+    selectedOrganismIndex = null;
+    currentResistances = [];
+    updateSelectedResistances();
+    
+    // Set button text to "Save Culture"
+    document.getElementById('saveCultureBtn').textContent = 'Save Culture';
+}
+
+    function showAntibioticForm() {
+    document.getElementById('antibioticForm').classList.remove('hidden');
+    document.getElementById('infectionForm').classList.add('hidden');
+    document.getElementById('cultureForm').classList.add('hidden');
+    document.getElementById('foreignBodyForm').classList.add('hidden');
+    document.getElementById('clinicalDataForm').classList.add('hidden');
+    resetAntibioticForm();
+    populateAntibioticsTable(); // Ensure infection dropdown is populated
+}
+
+    function showForeignBodyForm() {
+        document.getElementById('foreignBodyForm').classList.remove('hidden');
+        document.getElementById('cultureForm').classList.add('hidden');
+        document.getElementById('antibioticForm').classList.add('hidden');
+        document.getElementById('clinicalDataForm').classList.add('hidden');
+        resetForeignBodyForm();
+    }
+
+    function showClinicalDataForm() {
+        document.getElementById('clinicalDataForm').classList.remove('hidden');
+        document.getElementById('cultureForm').classList.add('hidden');
+        document.getElementById('antibioticForm').classList.add('hidden');
+        document.getElementById('foreignBodyForm').classList.add('hidden');
+        resetClinicalDataForm();
+    }
+
+    function hideAntibioticForm() {
+        document.getElementById('antibioticForm').classList.add('hidden');
+        resetAntibioticForm();
+    }
+
+    function hideForeignBodyForm() {
+        document.getElementById('foreignBodyForm').classList.add('hidden');
+        resetForeignBodyForm();
+    }
+
+    function hideClinicalDataForm() {
+        document.getElementById('clinicalDataForm').classList.add('hidden');
+        resetClinicalDataForm();
+    }
+
+    function resetCultureForm() {
+    document.getElementById('cultureSpecimen').value = '';
+    document.getElementById('cultureDate').value = '';
+    document.getElementById('cultureTiming').value = '';
+    document.getElementById('cultureOrganism').value = '';
+    document.getElementById('cultureAntibiotic').value = '';
+    document.getElementById('cultureResult').value = '';
+    document.getElementById('resistancePattern').value = '';
+    
+    currentResistances = [];
+    updateSelectedResistances();
+    
+    // Hide the form sections
+    document.getElementById('organismSection').classList.add('hidden');
+    document.getElementById('sensitivitySection').classList.add('hidden');
+    document.getElementById('resistanceSection').classList.add('hidden');
+    
+    // Reset editing state
+    currentCulture = null;
+    selectedCultureIndex = null;
+    selectedOrganismIndex = null;
+    renderCulturePreview();
+}
+    function resetAntibioticForm() {
+    document.getElementById('abInfection').value = '';
+    document.getElementById('abName').value = '';
+    document.getElementById('abType').value = '';
+    document.getElementById('abDose').value = '';
+    document.getElementById('abUnits').value = '';
+    document.getElementById('abTimesPerDay').value = '';
+    document.getElementById('abRoute').value = '';
+    document.getElementById('abStart').value = '';
+    document.getElementById('abEnd').value = '';
+    document.querySelector('#antibioticForm h3').innerText = 'Add Antibiotic';
+    document.querySelector('#antibioticForm .btn-primary').innerText = 'Add Antibiotic';
+    document.querySelector('#antibioticForm .btn-primary').onclick = addAntibioticEntry;
+}
+
+    function resetForeignBodyForm() {
+        document.getElementById('fbDeviceType').value = '';
+        document.getElementById('fbInsertionDate').value = '';
+        document.getElementById('fbRemovalDate').value = '';
+        document.querySelector('#foreignBodyForm h3').innerText = 'Add Foreign Body';
+        document.querySelector('#foreignBodyForm .btn-primary').innerText = 'Add Foreign Body';
+        editingForeignBodyIndex = null;
+    }
+
+    function resetClinicalDataForm() {
+        document.getElementById('cdDate').value = '';
+        document.getElementById('cdTemperature').value = '';
+        document.getElementById('cdNoradrenaline').value = '';
+        document.getElementById('cdWBC').value = '';
+        document.getElementById('cdCRP').value = '';
+        document.getElementById('cdPCT').value = '';
+        document.getElementById('cdHgb').value = '';
+        document.getElementById('cdUrea').value = '';
+        document.getElementById('cdCreatinine').value = '';
+        document.getElementById('cdMeasCrCl').value = '';
+        document.getElementById('cdPEEP').value = '';
+        document.getElementById('cdPO2').value = '';
+        document.getElementById('cdFiO2').value = '';
+        document.querySelector('#clinicalDataForm h3').innerText = 'Add Clinical Data';
+        document.querySelector('#clinicalDataForm .btn-primary').innerText = 'Add Clinical Data';
+        editingClinicalDataIndex = null;
+    }
+
+   function populateTables() {
+    populateCulturesTable();
+    populateAntibioticsTable();
+    populateForeignBodiesTable();
+    populateClinicalDataTable();
+        
+        // Show transfer history if it exists
+        const patient = patients[bedIndex][currentPatientIndex[bedIndex]];
+        const historyContainer = document.getElementById('transferHistoryContainer');
+        
+        if (patient.transferHistory && patient.transferHistory.length > 0) {
+            historyContainer.classList.remove('hidden');
+            historyContainer.innerHTML = `
+    <div class="transfer-entry">
+        ${patient.transferHistory.map(t => `${t.date}: Bed ${t.fromBed}→${t.toBed}`).join(' | ')}
+    </div>
+`;
+
+        } else {
+            historyContainer.classList.add('hidden');
+            historyContainer.innerHTML = '';
+        }
+    }
+
+    function populateCulturesTable() {
+    const table = document.querySelector('#culturesTable tbody');
+    table.innerHTML = '';
+    const patient = patients[bedIndex][currentPatientIndex[bedIndex]];
+    
+    patient.cultures.forEach((culture, cIndex) => {
+        culture.organisms.forEach((organism, oIndex) => {
+            const row = document.createElement('tr');
+
+            // Create action cell
+            const actionCell = document.createElement('td');
+            actionCell.className = 'action-cell';
+
+            // Create EDIT button
+            const editButton = document.createElement('button');
+            editButton.className = 'btn-primary';
+            editButton.textContent = 'Edit';
+            editButton.onclick = function() { editCulture(cIndex, oIndex); };
+
+            // Create DELETE button
+            const deleteButton = document.createElement('button');
+            deleteButton.className = 'btn-danger';
+            deleteButton.textContent = 'Delete';
+            deleteButton.onclick = function() { deleteCulture(cIndex, oIndex); };
+
+            // Add buttons to cell
+            actionCell.appendChild(editButton);
+            actionCell.appendChild(deleteButton);
+
+            // Build row
+            row.innerHTML = `
+                <td>${culture.specimen}</td>
+                <td>${culture.date}</td>
+                <td>${culture.timing || ''}</td>
+                <td>${organism.name}</td>
+                <td>${organism.sensitivities.map(s => `${s.antibiotic}: ${s.result}`).join(', ')}</td>
+                <td>${organism.resistances ? organism.resistances.join(', ') : 'None'}</td>`;
+
+            // Add action cell
+            row.appendChild(actionCell);
+            table.appendChild(row);
+        });
+    });
+
+    // ✅ Auto-scroll to bottom AFTER DOM updates
+    setTimeout(() => {
+        const wrapper = document.getElementById('culturesTableWrapper');
+        if (wrapper) {
+            wrapper.scrollTop = wrapper.scrollHeight;
+        }
+    }, 0);
+}
+
+
+    function populateAntibioticsTable() {
+    const display = document.getElementById('infectionsDisplay');
+    display.innerHTML = '';
+    const patient = patients[bedIndex][currentPatientIndex[bedIndex]];  
+
+    patient.infections.forEach((infection, infIndex) => {
+        const infectionDiv = document.createElement('div');
+        infectionDiv.className = 'infection-entry';
+        infectionDiv.setAttribute('data-index', infIndex);
+        
+        const headerDiv = document.createElement('div');
+        headerDiv.className = 'compact-infection-header';
+        headerDiv.onclick = () => infectionDiv.classList.toggle('collapsed');
+        
+        // In the populateAntibioticsTable function, find the line that displays the infection dates:
+headerDiv.innerHTML = `
+    <div class="compact-infection-title">
+        ${infection.type} ${formatInfectionDateRange(infection.start, infection.end)}
+    </div>
+    <div>
+        <button onclick="event.stopPropagation();editInfection(${infIndex})" class="btn-primary">Edit</button>
+        <button onclick="event.stopPropagation();deleteInfection(${infIndex})" class="btn-danger">Delete</button>
+    </div>
+`;
+        
+        const detailsDiv = document.createElement('div');
+        detailsDiv.className = 'infection-details';
+        detailsDiv.innerHTML = `<p><strong>Evidence:</strong> ${infection.evidence}</p>`;
+        
+        const abListDiv = document.createElement('div');
+        abListDiv.className = 'compact-antibiotics';
+        
+        infection.antibiotics.forEach((ab, abIndex) => {
+            const abDiv = document.createElement('div');
+abDiv.className = 'compact-antibiotic';
+
+const awareClass = awareClassification[ab.name.trim()] || 'Unknown';
+const daysOnAb = calculateDaysOnAntibiotic(ab.start, ab.end);
+
+// Determine if ongoing
+const isOngoing = !ab.end || ab.end.trim() === '';
+const endDateLabel = isOngoing ? 'Ongoing' : ab.end;
+
+// Color classes based on days
+let bgColorClass = '';
+if (isOngoing) {
+    if (daysOnAb <= 7) bgColorClass = 'ongoing-green';
+    else if (daysOnAb <= 10) bgColorClass = 'ongoing-yellow';
+    else if (daysOnAb <= 14) bgColorClass = 'ongoing-orange';
+    else bgColorClass = 'ongoing-red';
+}
+
+// Apply color if ongoing
+if (bgColorClass) abDiv.classList.add(bgColorClass);
+
+// In the same function, find where antibiotic dates are displayed and modify to:
+abDiv.innerHTML = `
+    <div class="compact-ab-name ${awareClass.toLowerCase()}">
+        ${ab.name} <span class="aware ${awareClass}">${awareClass}</span>
+    </div>
+    <div class="compact-ab-details">
+        <span>${ab.dose}${ab.units}×${ab.timesPerDay}/day</span>
+        <span>${ab.route}</span>
+        <span>${ab.type}</span>
+        <span>${formatToDDMM(ab.start)}</span>
+        <span>– ${ab.end ? formatToDDMM(ab.end) : 'ONGOING'}</span>
+        <span>Day ${daysOnAb}</span>
+    </div>
+    <div class="compact-ab-actions">
+        <button onclick="editAntibioticInline(${infIndex}, ${abIndex}, this)" class="btn-primary">Edit</button>
+        <button onclick="deleteAntibiotic(${infIndex}, ${abIndex})" class="btn-danger">Delete</button>
+    </div>
+`;
+
+
+            abListDiv.appendChild(abDiv);
+        });
+        
+        // Add new antibiotic button
+        const addAbButton = document.createElement('button');
+        addAbButton.className = 'btn-primary';
+        addAbButton.style.marginTop = '8px';
+        addAbButton.textContent = 'Add Antibiotic';
+        addAbButton.onclick = () => showAntibioticFormInline(infIndex, abListDiv);
+        
+        infectionDiv.appendChild(headerDiv);
+        infectionDiv.appendChild(detailsDiv);
+        infectionDiv.appendChild(abListDiv);
+        infectionDiv.appendChild(addAbButton);
+        display.appendChild(infectionDiv);
+    });
+}
+function formatToDDMM(dateStr) {
+    if (!dateStr) return '';
+    const [year, month, day] = dateStr.split('-');
+    return `${day}/${month}`;
+}
+
+function calculateDaysOnAntibiotic(startDate, endDate) {
+    if (!startDate) return 0;
+    const start = new Date(startDate);
+    const end = endDate ? new Date(endDate) : new Date();
+    const diffTime = Math.abs(end - start);
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+}
+
+function showAntibioticFormInline(infIndex, container) {
+    // Remove any existing inline forms
+    const existingForms = container.querySelectorAll('.inline-antibiotic-form');
+    existingForms.forEach(form => form.remove());
+    
+    const formDiv = document.createElement('div');
+    formDiv.className = 'inline-antibiotic-form';
+    
+    formDiv.innerHTML = `
+        <div class="inline-form-row">
+            <div>
+                <label>Antibiotic</label>
+                <select id="inlineAbName" class="antibiotic-select">
+                    <option value="">-- Select --</option>
+                    ${antibiotics.map(ab => 
+                        `<option value="${ab}">${ab}</option>`
+                    ).join('')}
+                </select>
+            </div>
+            <div>
+                <label>Type</label>
+                <select id="inlineAbType">
+                    <option value="">-- Select --</option>
+                    <option value="empirical">empirical</option>
+                    <option value="preemptive">preemptive</option>
+                    <option value="targeted">targeted</option>
+                    <option value="medical prophylaxis">medical prophylaxis</option>
+                    <option value="surgical prophylaxis">surgical prophylaxis</option>
+                </select>
+            </div>
+        </div>
+        <div class="inline-form-row">
+            <div>
+                <label>Dose</label>
+                <input type="number" step="0.25" id="inlineAbDose">
+            </div>
+            <div>
+                <label>Units</label>
+                <select id="inlineAbUnits">
+                    <option value="g">g</option>
+                    <option value="MU">MU</option>
+                </select>
+            </div>
+            <div>
+                <label>Times/Day</label>
+                <select id="inlineAbTimesPerDay">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                </select>
+            </div>
+        </div>
+        <div class="inline-form-row">
+            <div>
+                <label>Route</label>
+                <select id="inlineAbRoute">
+                    <option value="IV">IV</option>
+                    <option value="P.OS">P.OS</option>
+                    <option value="NEBS">NEBS</option>
+                </select>
+            </div>
+            <div>
+                <label>Start Date</label>
+                <input type="date" id="inlineAbStart" value="${new Date().toISOString().split('T')[0]}">
+            </div>
+            <div>
+                <label>End Date</label>
+                <input type="date" id="inlineAbEnd">
+            </div>
+        </div>
+        <div class="inline-form-actions">
+            <button onclick="addAntibioticInline(${infIndex}, this.parentElement.parentElement)" class="btn-success">Save</button>
+            <button onclick="this.parentElement.parentElement.remove()" class="btn-default">Cancel</button>
+        </div>
+    `;
+    
+    container.appendChild(formDiv);
+}
+
+function addAntibioticInline(infIndex, formDiv) {
+    const antibiotic = {
+        name: formDiv.querySelector('#inlineAbName').value,
+        type: formDiv.querySelector('#inlineAbType').value,
+        dose: formDiv.querySelector('#inlineAbDose').value,
+        units: formDiv.querySelector('#inlineAbUnits').value,
+        timesPerDay: formDiv.querySelector('#inlineAbTimesPerDay').value,
+        route: formDiv.querySelector('#inlineAbRoute').value,
+        start: formDiv.querySelector('#inlineAbStart').value,
+        end: formDiv.querySelector('#inlineAbEnd').value || ''
+    };
+
+    if (!antibiotic.name || !antibiotic.type || !antibiotic.dose || !antibiotic.start) {
+        alert('Please fill in all required fields');
+        return;
+    }
+
+    patients[bedIndex][currentPatientIndex[bedIndex]].infections[infIndex].antibiotics.push(antibiotic);
+    saveAllData();
+    populateAntibioticsTable();
+}
+
+function editAntibioticInline(infIndex, abIndex, button) {
+    const ab = patients[bedIndex][currentPatientIndex[bedIndex]].infections[infIndex].antibiotics[abIndex];
+    const abDiv = button.closest('.compact-antibiotic');
+    const container = abDiv.parentElement;
+    
+    // Remove any existing inline forms
+    const existingForms = container.querySelectorAll('.inline-antibiotic-form');
+    existingForms.forEach(form => form.remove());
+    
+    const formDiv = document.createElement('div');
+    formDiv.className = 'inline-antibiotic-form';
+    
+    formDiv.innerHTML = `
+        <div class="inline-form-row">
+            <div>
+                <label>Antibiotic</label>
+                <select id="inlineAbName" class="antibiotic-select">
+                    <option value="">-- Select --</option>
+                    ${antibiotics.map(drug => 
+                        `<option value="${drug}" ${drug === ab.name ? 'selected' : ''}>${drug}</option>`
+                    ).join('')}
+                </select>
+            </div>
+            <div>
+                <label>Type</label>
+                <select id="inlineAbType">
+                    <option value="empirical" ${ab.type === 'empirical' ? 'selected' : ''}>empirical</option>
+                    <option value="preemptive" ${ab.type === 'preemptive' ? 'selected' : ''}>preemptive</option>
+                    <option value="targeted" ${ab.type === 'targeted' ? 'selected' : ''}>targeted</option>
+                    <option value="medical prophylaxis" ${ab.type === 'medical prophylaxis' ? 'selected' : ''}>medical prophylaxis</option>
+                    <option value="surgical prophylaxis" ${ab.type === 'surgical prophylaxis' ? 'selected' : ''}>surgical prophylaxis</option>
+                </select>
+            </div>
+        </div>
+        <div class="inline-form-row">
+            <div>
+                <label>Dose</label>
+                <input type="number" step="0.25" id="inlineAbDose" value="${ab.dose}">
+            </div>
+            <div>
+                <label>Units</label>
+                <select id="inlineAbUnits">
+                    <option value="g" ${ab.units === 'g' ? 'selected' : ''}>g</option>
+                    <option value="MU" ${ab.units === 'MU' ? 'selected' : ''}>MU</option>
+                </select>
+            </div>
+            <div>
+                <label>Times/Day</label>
+                <select id="inlineAbTimesPerDay">
+                    <option value="1" ${ab.timesPerDay == 1 ? 'selected' : ''}>1</option>
+                    <option value="2" ${ab.timesPerDay == 2 ? 'selected' : ''}>2</option>
+                    <option value="3" ${ab.timesPerDay == 3 ? 'selected' : ''}>3</option>
+                    <option value="4" ${ab.timesPerDay == 4 ? 'selected' : ''}>4</option>
+                    <option value="5" ${ab.timesPerDay == 5 ? 'selected' : ''}>5</option>
+                    <option value="6" ${ab.timesPerDay == 6 ? 'selected' : ''}>6</option>
+                </select>
+            </div>
+        </div>
+        <div class="inline-form-row">
+            <div>
+                <label>Route</label>
+                <select id="inlineAbRoute">
+                    <option value="IV" ${ab.route === 'IV' ? 'selected' : ''}>IV</option>
+                    <option value="P.OS" ${ab.route === 'P.OS' ? 'selected' : ''}>P.OS</option>
+                    <option value="NEBS" ${ab.route === 'NEBS' ? 'selected' : ''}>NEBS</option>
+                </select>
+            </div>
+            <div>
+                <label>Start Date</label>
+                <input type="date" id="inlineAbStart" value="${ab.start}">
+            </div>
+            <div>
+                <label>End Date</label>
+                <input type="date" id="inlineAbEnd" value="${ab.end || ''}">
+            </div>
+        </div>
+        <div class="inline-form-actions">
+            <button onclick="updateAntibioticInline(${infIndex}, ${abIndex}, this.parentElement.parentElement)" class="btn-success">Update</button>
+            <button onclick="cancelAntibioticEdit(this.parentElement.parentElement, ${infIndex})" class="btn-default">Cancel</button>
+        </div>
+    `;
+    
+    // Insert the form before the antibiotic div and keep the original entry visible
+    container.insertBefore(formDiv, abDiv);
+    // Do not hide the original antibiotic div
+    // abDiv.style.display = 'none'; // Comment out or remove this line
+}
+
+function cancelAntibioticEdit(formDiv, infIndex) {
+    // Remove the inline form
+    formDiv.remove();
+    // No need to restore the original entry since it was never hidden
+    // Optionally, you can call populateAntibioticsTable() if you want to refresh the entire table
+    // populateAntibioticsTable();
+}
+
+function updateAntibioticInline(infIndex, abIndex, formDiv) {
+    const abDiv = formDiv.nextElementSibling;
+    const antibiotic = {
+        name: formDiv.querySelector('#inlineAbName').value,
+        type: formDiv.querySelector('#inlineAbType').value,
+        dose: formDiv.querySelector('#inlineAbDose').value,
+        units: formDiv.querySelector('#inlineAbUnits').value,
+        timesPerDay: formDiv.querySelector('#inlineAbTimesPerDay').value,
+        route: formDiv.querySelector('#inlineAbRoute').value,
+        start: formDiv.querySelector('#inlineAbStart').value,
+        end: formDiv.querySelector('#inlineAbEnd').value || ''
+    };
+
+    if (!antibiotic.name || !antibiotic.type || !antibiotic.dose || !antibiotic.start) {
+        alert('Please fill in all required fields');
+        return;
+    }
+
+    patients[bedIndex][currentPatientIndex[bedIndex]].infections[infIndex].antibiotics[abIndex] = antibiotic;
+    saveAllData();
+    populateAntibioticsTable();
+}
+
+    function populateForeignBodiesTable() {
+        const table = document.querySelector('#foreignBodiesTable tbody');
+        table.innerHTML = '';
+        const patient = patients[bedIndex][currentPatientIndex[bedIndex]];
+        patient.foreignBodies.forEach((fb, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${fb.deviceType}</td>
+                <td>${fb.insertionDate}</td>
+                <td>${fb.removalDate || ''}</td>
+                <td class="action-cell">
+                    <button onclick="editForeignBody(${index})" class="btn-primary">Edit</button>
+                    <button onclick="deleteForeignBody(${index})" class="btn-danger">Delete</button>
+                </td>`;
+            table.appendChild(row);
+        });
+    }
+
+    function populateClinicalDataTable() {
+    const table = document.querySelector('#clinicalDataTable tbody');
+    table.innerHTML = '';
+    const patient = patients[bedIndex][currentPatientIndex[bedIndex]];
+    patient.clinicalData.forEach((cd, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${cd.date}</td>
+            <td>${cd.temperature || ''}</td>
+            <td>${cd.noradrenaline !== undefined ? cd.noradrenaline : 0}</td>
+            <td>${cd.wbc || ''}</td>
+            <td>${cd.crp || ''}</td>
+            <td>${cd.pct || ''}</td>
+            <td>${cd.hgb || ''}</td>
+            <td>${cd.urea || ''}</td>
+            <td>${cd.creatinine || ''}</td>
+            <td>${cd.peep || ''}</td>
+            <td>${cd.pO2 || ''}</td>
+            <td>${cd.fiO2 || ''}</td>
+            <td>${cd.pfRatio || ''}</td>
+            <td>${cd.weightUsed || ''}</td>
+            <td>${cd.crCl || ''}</td>
+            <td>${cd.meascrcl || ''}</td>
+            <td>${cd.noraDose !== undefined ? cd.noraDose : 0}</td>
+            <td class="action-cell">
+                <button onclick="editClinicalData(${index})" class="btn-primary">Edit</button>
+                <button onclick="deleteClinicalData(${index})" class="btn-danger">Delete</button>
+            </td>`;
+        table.appendChild(row);
+    });
+}
+    // Culture Management Functions
+    // MODIFIED culture management functions
+
+
+function addCultureEntry() {
+    const specimen = document.getElementById('cultureSpecimen').value;
+    const date = document.getElementById('cultureDate').value;
+    const timing = document.getElementById('cultureTiming').value;
+
+    if (!specimen || !date) {
+        alert('Please provide specimen and date.');
+        return;
+    }
+
+    currentCulture = {
+        specimen,
+        date,
+        timing,
+        organisms: []
+    };
+
+    // Show organism section but keep form visible
+    document.getElementById('organismSection').classList.remove('hidden');
+    document.getElementById('sensitivitySection').classList.add('hidden');
+    document.getElementById('resistanceSection').classList.add('hidden');
+    
+    // Highlight but don't clear the form
+    highlightFields(['cultureSpecimen', 'cultureDate', 'cultureTiming']);
+    renderCulturePreview();
+}
+
+function addOrganism() {
+    const organismName = document.getElementById('cultureOrganism').value;
+
+    if (!organismName) {
+        alert('Please select an organism.');
+        return;
+    }
+
+    if (!currentCulture) {
+        alert('Please start with culture information first.');
+        return;
+    }
+
+    currentResistances = [];
+currentOrganism = {
+    name: organismName,
+    sensitivities: [],
+    resistances: currentResistances
+};
+
+    // Add to current culture but don't save yet
+    currentCulture.organisms.push(currentOrganism);
+    
+    // Show sensitivity section but keep organism visible
+    document.getElementById('sensitivitySection').classList.remove('hidden');
+    document.getElementById('resistanceSection').classList.remove('hidden');
+    
+    // Highlight but don't clear the organism field
+    highlightFields(['cultureOrganism']);
+    renderCulturePreview();
+
+}
+
+function addSensitivity() {
+    const antibiotic = document.getElementById('cultureAntibiotic').value;
+    const result = document.getElementById('cultureResult').value;
+
+    if (!antibiotic || !result) {
+        alert('Please select an antibiotic and result.');
+        return;
+    }
+
+    if (!currentOrganism) {
+        alert('Please select an organism first.');
+        return;
+    }
+
+    currentOrganism.sensitivities.push({ antibiotic, result });
+    
+    // Clear just these fields but keep section visible
+    document.getElementById('cultureAntibiotic').value = '';
+    document.getElementById('cultureResult').value = '';
+    
+    // Highlight to show success but don't hide section
+    highlightFields(['cultureAntibiotic', 'cultureResult']);
+    renderCulturePreview();
+}
+
+function addResistance() {
+    const pattern = document.getElementById('resistancePattern').value;
+    
+    if (!pattern) {
+        alert('Please select a resistance pattern.');
+        return;
+    }
+
+    if (!currentOrganism) {
+        alert('Please select an organism first.');
+        return;
+    }
+
+    if (!currentResistances.includes(pattern)) {
+    currentResistances.push(pattern);
+    if (currentOrganism) currentOrganism.resistances = [...currentResistances];
+    updateSelectedResistances();
+        document.getElementById('resistancePattern').value = '';
+        renderCulturePreview();
+    } else {
+        alert('This resistance pattern is already added.');
+    }
+}
+
+function saveCulture() {
+    const patient = patients[bedIndex][currentPatientIndex[bedIndex]];
+
+    if (!currentCulture || currentCulture.organisms.length === 0) {
+        alert('Please complete at least one organism entry before saving.');
+        return;
+    }
+
+    // Sync the latest resistances to the current organism
+    if (currentOrganism) {
+        currentOrganism.resistances = [...currentResistances];
+    }
+
+    // Update the currentCulture's details (from UI in case of edits)
+    currentCulture.specimen = document.getElementById('cultureSpecimen').value;
+    currentCulture.date = document.getElementById('cultureDate').value;
+    currentCulture.timing = document.getElementById('cultureTiming').value;
+
+    // Handle save/update
+    if (selectedCultureIndex !== null) {
+        // Update existing culture
+        patient.cultures[selectedCultureIndex] = currentCulture;
+    } else {
+        // Add new culture
+        patient.cultures.push(currentCulture);
+    }
+
+    saveAllData();
+    populateCulturesTable();
+    resetCultureForm();
+}
+
+
+// Proper delete function with confirmation
+function deleteCulture(cIndex, oIndex) {
+    if (confirm('Are you sure you want to delete this organism entry?')) {
+        const patient = patients[bedIndex][currentPatientIndex[bedIndex]];
+        
+        // Remove the specific organism
+        patient.cultures[cIndex].organisms.splice(oIndex, 1);
+        
+        // If no organisms left, remove the whole culture entry
+        if (patient.cultures[cIndex].organisms.length === 0) {
+            patient.cultures.splice(cIndex, 1);
+        }
+        
+        saveAllData();
+        populateCulturesTable();
+        
+        // Reset form if we were editing this entry
+        if (selectedCultureIndex === cIndex) {
+            resetCultureForm();
+        }
+    }
+}
+
+function editCulture(cIndex, oIndex) {
+    // First show the culture form if it's hidden
+    document.getElementById('cultureForm').classList.remove('hidden');
+    
+    // Store which culture and organism we're editing
+    selectedCultureIndex = cIndex;
+    selectedOrganismIndex = oIndex;
+    
+    // Get the patient and the specific culture
+    const patient = patients[bedIndex][currentPatientIndex[bedIndex]];
+    const cultureToEdit = patient.cultures[cIndex];
+    const organismToEdit = cultureToEdit.organisms[oIndex];
+    
+    // Set current culture and organism
+    currentCulture = {
+        specimen: cultureToEdit.specimen,
+        date: cultureToEdit.date,
+        timing: cultureToEdit.timing || '',
+        organisms: [{
+            name: organismToEdit.name,
+            sensitivities: [...organismToEdit.sensitivities],
+            resistances: [...(organismToEdit.resistances || [])]
+        }]
+    };
+    
+    currentOrganism = currentCulture.organisms[0];
+    currentResistances = [...currentOrganism.resistances];
+    
+    // Fill the form with existing data
+    document.getElementById('cultureSpecimen').value = currentCulture.specimen;
+    document.getElementById('cultureDate').value = currentCulture.date;
+    document.getElementById('cultureTiming').value = currentCulture.timing || '';
+    document.getElementById('cultureOrganism').value = currentOrganism.name;
+    
+    // Load resistances
+    updateSelectedResistances();
+    
+    // Show all form sections
+    document.getElementById('organismSection').classList.remove('hidden');
+    document.getElementById('sensitivitySection').classList.remove('hidden');
+    document.getElementById('resistanceSection').classList.remove('hidden');
+    
+    // Change button text to "Update Culture"
+    document.getElementById('saveCultureBtn').textContent = 'Update Culture';
+    renderCulturePreview();
+}
+
+function updateSelectedResistances() {
+    const container = document.getElementById('selectedResistances');
+    container.innerHTML = '';
+    
+    currentResistances.forEach((resistance, index) => {
+        const tag = document.createElement('div');
+        tag.className = 'resistance-tag';
+        tag.innerHTML = `
+            ${resistance}
+            <button onclick="removeResistance(${index})">×</button>
+        `;
+        container.appendChild(tag);
+    });
+}
+
+function renderCulturePreview() {
+    const preview = document.getElementById('culturePreview');
+    if (!currentCulture || currentCulture.organisms.length === 0) {
+        preview.style.display = 'none';
+        preview.innerHTML = '';
+        return;
+    }
+
+    let html = `
+        <table style="width:100%; border-collapse: collapse; margin-top: 10px; font-size: 13px;">
+            <thead>
+                <tr style="background: #2c3e50; color: white;">
+                    <th style="padding: 6px; border: 1px solid #ccc;">Specimen</th>
+                    <th style="padding: 6px; border: 1px solid #ccc;">Date</th>
+                    <th style="padding: 6px; border: 1px solid #ccc;">Timing</th>
+                    <th style="padding: 6px; border: 1px solid #ccc;">Organism</th>
+                    <th style="padding: 6px; border: 1px solid #ccc;">Sensitivities</th>
+                    <th style="padding: 6px; border: 1px solid #ccc;">Resistances</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    currentCulture.organisms.forEach(org => {
+        const sens = org.sensitivities.map(s => `${s.antibiotic}: ${s.result}`).join(', ');
+        const res = org.resistances && org.resistances.length > 0 ? org.resistances.join(', ') : 'None';
+        html += `
+            <tr>
+                <td style="padding: 6px; border: 1px solid #ccc;">${currentCulture.specimen}</td>
+                <td style="padding: 6px; border: 1px solid #ccc;">${currentCulture.date}</td>
+                <td style="padding: 6px; border: 1px solid #ccc;">${currentCulture.timing || ''}</td>
+                <td style="padding: 6px; border: 1px solid #ccc;">${org.name}</td>
+                <td style="padding: 6px; border: 1px solid #ccc;">${sens}</td>
+                <td style="padding: 6px; border: 1px solid #ccc;">${res}</td>
+            </tr>
+        `;
+    });
+
+    html += `</tbody></table>`;
+    preview.innerHTML = html;
+    preview.style.display = 'block';
+}
+
+
+function removeResistance(index) {
+    currentResistances.splice(index, 1);
+    updateSelectedResistances();
+}
+function saveResistances() {
+    if (currentOrganism) {
+        currentOrganism.resistances = [...currentResistances];
+    }
+}
+    // Antibiotic Management Functions
+    function addAntibioticEntry() {
+    const infectionIndex = document.getElementById('abInfection').value;
+    if (infectionIndex === '') {
+        alert('Please select an infection.');
+        return;
+    }
+
+    const antibiotic = {
+        name: document.getElementById('abName').value,
+        type: document.getElementById('abType').value,
+        dose: document.getElementById('abDose').value,
+        units: document.getElementById('abUnits').value,
+        timesPerDay: document.getElementById('abTimesPerDay').value,
+        route: document.getElementById('abRoute').value,
+        start: document.getElementById('abStart').value,
+        end: document.getElementById('abEnd').value
+    };
+
+    if (!antibiotic.name || !antibiotic.type || !antibiotic.dose || !antibiotic.units || !antibiotic.route || !antibiotic.start) {
+        alert('Please fill in all required antibiotic fields.');
+        return;
+    }
+
+    const patient = patients[bedIndex][currentPatientIndex[bedIndex]];
+    patient.infections[infectionIndex].antibiotics.push(antibiotic);
+
+    saveAllData();
+    populateAntibioticsTable();
+    resetAntibioticForm();
+    hideAntibioticForm();
+    highlightFields(['abInfection', 'abName', 'abType', 'abDose', 'abUnits', 'abRoute', 'abStart']);
+}
+
+function editAntibiotic(infIndex, abIndex) {
+    const patient = patients[bedIndex][currentPatientIndex[bedIndex]];
+    const ab = patient.infections[infIndex].antibiotics[abIndex];
+    document.getElementById('abInfection').value = infIndex;
+    document.getElementById('abName').value = ab.name;
+    document.getElementById('abType').value = ab.type;
+    document.getElementById('abDose').value = ab.dose;
+    document.getElementById('abUnits').value = ab.units;
+    document.getElementById('abTimesPerDay').value = ab.timesPerDay || '';
+    document.getElementById('abRoute').value = ab.route;
+    document.getElementById('abStart').value = ab.start;
+    document.getElementById('abEnd').value = ab.end || '';
+
+    document.querySelector('#antibioticForm h3').innerText = 'Edit Antibiotic';
+    document.querySelector('#antibioticForm .btn-primary').innerText = 'Update Antibiotic';
+    document.getElementById('antibioticForm').classList.remove('hidden');
+    document.querySelector('#antibioticForm .btn-primary').onclick = () => {
+        patient.infections[infIndex].antibiotics[abIndex] = {
+            name: document.getElementById('abName').value,
+            type: document.getElementById('abType').value,
+            dose: document.getElementById('abDose').value,
+            units: document.getElementById('abUnits').value,
+            timesPerDay: document.getElementById('abTimesPerDay').value,
+            route: document.getElementById('abRoute').value,
+            start: document.getElementById('abStart').value,
+            end: document.getElementById('abEnd').value
+        };
+        saveAllData();
+        populateAntibioticsTable();
+        resetAntibioticForm();
+        hideAntibioticForm();
+    };
+}
+
+function deleteAntibiotic(infIndex, abIndex) {
+    if (confirm('Are you sure you want to delete this antibiotic?')) {
+        patients[bedIndex][currentPatientIndex[bedIndex]].infections[infIndex].antibiotics.splice(abIndex, 1);
+        saveAllData();
+        populateAntibioticsTable();
+    }
+}
+
+    // Foreign Body Management Functions
+    function addForeignBodyEntry() {
+        const foreignBody = {
+            deviceType: document.getElementById('fbDeviceType').value,
+            insertionDate: document.getElementById('fbInsertionDate').value,
+            removalDate: document.getElementById('fbRemovalDate').value
+        };
+
+        if (!foreignBody.deviceType || !foreignBody.insertionDate) {
+            alert('Please provide device type and insertion date.');
+            return;
+        }
+
+        const patient = patients[bedIndex][currentPatientIndex[bedIndex]];
+        if (editingForeignBodyIndex !== null) {
+            patient.foreignBodies[editingForeignBodyIndex] = foreignBody;
+        } else {
+            patient.foreignBodies.push(foreignBody);
+        }
+
+        saveAllData();
+        populateForeignBodiesTable();
+        resetForeignBodyForm();
+        hideForeignBodyForm();
+        highlightFields(['fbDeviceType', 'fbInsertionDate']);
+    }
+
+    function editForeignBody(index) {
+        editingForeignBodyIndex = index;
+        const fb = patients[bedIndex][currentPatientIndex[bedIndex]].foreignBodies[index];
+        document.getElementById('fbDeviceType').value = fb.deviceType;
+        document.getElementById('fbInsertionDate').value = fb.insertionDate;
+        document.getElementById('fbRemovalDate').value = fb.removalDate || '';
+        document.querySelector('#foreignBodyForm h3').innerText = 'Edit Foreign Body';
+        document.querySelector('#foreignBodyForm .btn-primary').innerText = 'Update Foreign Body';
+        document.getElementById('foreignBodyForm').classList.remove('hidden');
+    }
+
+    function deleteForeignBody(index) {
+        if (confirm('Are you sure you want to delete this foreign body?')) {
+            patients[bedIndex][currentPatientIndex[bedIndex]].foreignBodies.splice(index, 1);
+            saveAllData();
+            populateForeignBodiesTable();
+        }
+    }
+
+    // Clinical Data Management Functions
+    function addClinicalDataEntry() {
+    const patient = patients[bedIndex][currentPatientIndex[bedIndex]];
+    const age = calculateAge(patient.dob);
+    const clinicalDataDate = document.getElementById('cdDate').value;
+
+    // Check for active PVC and CVC
+    let hasPVC = false;
+    let hasCVC = false;
+    patient.foreignBodies.forEach(fb => {
+        const isActive = !fb.removalDate || fb.removalDate >= clinicalDataDate;
+        if (fb.deviceType === 'PVC' && isActive) {
+            hasPVC = true;
+        }
+        if (fb.deviceType === 'CVC' && isActive) {
+            hasCVC = true;
+        }
+    });
+
+    // If both PVC and CVC are present, prioritize CVC (hasPVC = false)
+    if (hasPVC && hasCVC) {
+        hasPVC = false;
+    }
+
+    // Get and process noradrenaline value (blank becomes 0)
+    const noradrenalineValue = parseFloat(document.getElementById('cdNoradrenaline').value) || 0;
+
+    const clinicalData = {
+        date: clinicalDataDate,
+        temperature: parseFloat(document.getElementById('cdTemperature').value) || '',
+        noradrenaline: noradrenalineValue, // Will be 0 if blank
+        wbc: parseFloat(document.getElementById('cdWBC').value) || '',
+        crp: parseFloat(document.getElementById('cdCRP').value) || '',
+        pct: parseFloat(document.getElementById('cdPCT').value) || '',
+        hgb: parseFloat(document.getElementById('cdHgb').value) || '',
+        urea: parseFloat(document.getElementById('cdUrea').value) || '',
+        creatinine: parseFloat(document.getElementById('cdCreatinine').value) || '',
+        meascrcl: parseFloat(document.getElementById('cdMeasCrCl').value) || '',
+        peep: parseFloat(document.getElementById('cdPEEP').value) || '',
+        pO2: parseFloat(document.getElementById('cdPO2').value) || '',
+        fiO2: parseFloat(document.getElementById('cdFiO2').value) || ''
+    };
+
+    if (!clinicalData.date) {
+        alert('Please provide the date for clinical data.');
+        return;
+    }
+
+    // Calculate derived fields
+    const ibw = calculateIBW(patient.gender, patient.height);
+    clinicalData.ibw = ibw;
+    clinicalData.abw = calculateABW(ibw, patient.weight);
+    clinicalData.weightUsed = calculateWeightUsed(patient.bmi, patient.weight, ibw, clinicalData.abw);
+    clinicalData.crCl = calculateCrCl(patient.gender, age, clinicalData.weightUsed, clinicalData.creatinine);
+    
+    // Calculate noraDose - will be 0 when noradrenaline is 0
+    clinicalData.noraDose = noradrenalineValue === 0 ? 0 : calculateNoraDose(noradrenalineValue, clinicalData.weightUsed, hasPVC);
+    
+    clinicalData.pfRatio = calculatePFRatio(clinicalData.pO2, clinicalData.fiO2);
+
+    if (editingClinicalDataIndex !== null) {
+        patient.clinicalData[editingClinicalDataIndex] = clinicalData;
+    } else {
+        patient.clinicalData.push(clinicalData);
+    }
+
+    saveAllData();
+    populateClinicalDataTable();
+    resetClinicalDataForm();
+    hideClinicalDataForm();
+    highlightFields(['cdDate', 'cdTemperature', 'cdNoradrenaline', 'cdWBC', 'cdCRP', 'cdPCT','cdHgb', 'cdUrea', 'cdCreatinine','cdMeasCrCl', 'cdPEEP', 'cdPO2', 'cdFiO2']);
+}
+
+    function editClinicalData(index) {
+    editingClinicalDataIndex = index;
+    const cd = patients[bedIndex][currentPatientIndex[bedIndex]].clinicalData[index];
+    document.getElementById('cdDate').value = cd.date;
+    document.getElementById('cdTemperature').value = cd.temperature || '';
+    document.getElementById('cdNoradrenaline').value = cd.noradrenaline !== undefined ? cd.noradrenaline : 0;
+    document.getElementById('cdWBC').value = cd.wbc || '';
+    document.getElementById('cdCRP').value = cd.crp || '';
+    document.getElementById('cdPCT').value = cd.pct || '';
+    document.getElementById('cdHgb').value = cd.hgb || '';
+    document.getElementById('cdUrea').value = cd.urea || '';
+    document.getElementById('cdCreatinine').value = cd.creatinine || '';
+    document.getElementById('cdMeasCrCl').value = cd.meascrcl || '';
+    document.getElementById('cdPEEP').value = cd.peep || '';
+    document.getElementById('cdPO2').value = cd.pO2 || '';
+    document.getElementById('cdFiO2').value = cd.fiO2 || '';
+
+    document.querySelector('#clinicalDataForm h3').innerText = 'Edit Clinical Data';
+    document.querySelector('#clinicalDataForm .btn-primary').innerText = 'Update Clinical Data';
+    document.getElementById('clinicalDataForm').classList.remove('hidden');
+}
+    function deleteClinicalData(index) {
+        if (confirm('Are you sure you want to delete this clinical data entry?')) {
+            patients[bedIndex][currentPatientIndex[bedIndex]].clinicalData.splice(index, 1);
+            saveAllData();
+            populateClinicalDataTable();
+        }
+    }
+function updateOrganism() {
+    const organismName = document.getElementById('cultureOrganism').value;
+
+    if (!organismName) {
+        alert('Please select an organism.');
+        return;
+    }
+
+    if (selectedCultureIndex === null || selectedOrganismIndex === null) {
+        alert('Please select a culture and organism first.');
+        return;
+    }
+
+    const patient = patients[bedIndex][currentPatientIndex[bedIndex]];
+    patient.cultures[selectedCultureIndex].organisms[selectedOrganismIndex].name = organismName;
+    patient.cultures[selectedCultureIndex].organisms[selectedOrganismIndex].resistances = [...currentResistances];
+
+    saveAllData();
+    populateCulturesTable();
+    document.getElementById('cultureOrganism').value = '';
+    
+    // Reset the button back to "Add Organism"
+    const organismButton = document.querySelector('#organismSection button');
+    organismButton.innerText = 'Add Organism';
+    organismButton.onclick = addOrganism;
+    
+    // Clear the selected indices
+    selectedOrganismIndex = null;
+    currentResistances = [];
+    updateSelectedResistances();
+}
+    // Initialize application
+    loadAllData();
+    renderBoard();
+    populateAntibioticDropdowns();
+    
+function adjustManageFullscreen() {
+  const manageSection = document.getElementById("manageSection");
+  if (!manageSection) return;
+
+  if (window.innerWidth <= 1024) {
+    manageSection.classList.add("fullscreen");
+  } else {
+    manageSection.classList.remove("fullscreen");
+  }
+}
+
+window.addEventListener("DOMContentLoaded", adjustManageFullscreen);
+window.addEventListener("resize", adjustManageFullscreen);
+    
+    </script>
+</body>
+</html>
